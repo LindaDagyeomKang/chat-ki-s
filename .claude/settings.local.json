@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill:*)",
+      "Bash(npx --workspace=apps/frontend next dev -p 3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/mails)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/notices)",
+      "Bash(curl -s http://localhost:3000/intranet/notices)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3)",
+      "Bash(sed -i '' '73s/<>/\\\\<React.Fragment\\\\>/' /Users/1147xdg/Desktop/chat-ki-s/apps/frontend/src/app/intranet/notices/page.tsx)",
+      "Bash(sed -i '' '212s/<\\\\/>/\\\\<\\\\/React.Fragment\\\\>/' /Users/1147xdg/Desktop/chat-ki-s/apps/frontend/src/app/intranet/notices/page.tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/leaves)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/onboarding)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/addressbook)",
+      "Bash(curl -s http://localhost:4000/api/auth/login -H 'Content-Type: application/json' -d '{\"employeeId\":\"20260005\",\"password\":\"kdg0005\"}')",
+      "Bash(lsof -ti:4000)",
+      "Bash(npx dotenv:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/intranet/hr)"
+    ]
+  }
+}

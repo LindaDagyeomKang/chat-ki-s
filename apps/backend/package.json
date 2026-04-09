@@ -1,0 +1,35 @@
+{
+  "name": "@chat-ki-s/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../../.env -- tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@chat-ki-s/shared": "*",
+    "@fastify/cors": "^8.0.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/multipart": "^8.0.0",
+    "@fastify/websocket": "^8.0.0",
+    "dotenv": "^17.4.1",
+    "dotenv-cli": "^11.0.0",
+    "drizzle-orm": "^0.30.0",
+    "fastify": "^4.0.0",
+    "pg": "^8.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.0.0",
+    "drizzle-kit": "^0.20.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,290 @@
+"""
+OpenAI Function Calling 도구 정의
+
+LLM이 사용할 수 있는 함수(도구)를 정의합니다.
+실제 실행은 백엔드에서 수행하고, 결과를 LLM에 다시 전달합니다.
+"""
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_mails",
+            "description": "사용자의 메일을 조회합니다. '메일 확인해줘', '메일 뭐 왔어?' 같은 일반 요청은 filter='today'로 오늘 메일을 보여주세요. '전체 메일 보여줘'처럼 명시적으로 전체를 요청할 때만 filter='all'을 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filter": {
+                        "type": "string",
+                        "enum": ["today", "all", "unread"],
+                        "description": "메일 필터: today(오늘 수신), all(전체), unread(안 읽은 메일)"
+                    },
+                    "sender": {
+                        "type": "string",
+                        "description": "특정 발신자 이름으로 필터 (선택)"
+                    },
+                    "keyword": {
+                        "type": "string",
+                        "description": "제목/본문 키워드 검색 (선택)"
+                    },
+                },
+                "required": ["filter"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_leave_balance",
+            "description": "사용자의 연차 잔여일수, 사용 내역을 조회합니다.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_expense_history",
+            "description": "사용자의 경비 정산 내역을 조회합니다.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_profile",
+            "description": "사용자 본인의 프로필(소속, 직급, 이메일, 내선번호, 입사일 등)을 조회합니다.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_schedule",
+            "description": "특정 날짜의 일정(회의, 미팅 등)을 조회합니다. date를 지정하지 않으면 오늘 일정을 조회합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {"type": "string", "description": "조회할 날짜 (YYYY-MM-DD). 없으면 오늘"},
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_notices",
+            "description": "최근 공지사항 목록을 조회합니다.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_assignments",
+            "description": "사용자의 온보딩 과제 목록을 조회합니다.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_employees",
+            "description": "임직원을 검색합니다. 이름, 부서, 팀, 담당업무, 전화번호로 검색할 수 있습니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "검색할 직원 이름"},
+                    "department": {"type": "string", "description": "부서/팀명"},
+                    "topic": {"type": "string", "description": "담당 업무 키워드"},
+                    "phone": {"type": "string", "description": "전화번호/내선번호"},
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "find_substitute",
+            "description": "특정 직원의 부재/휴가 시 대리인을 찾습니다. 같은 팀 내 차상위 직급 직원을 추천합니다. '~님 휴가시면 누구한테 연락해?', '~님 부재 시 대리인', '~님 대신 연락할 사람' 등의 질문에 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "부재 중인 직원 이름"},
+                },
+                "required": ["name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_departments",
+            "description": "회사의 부서/팀 목록을 조회합니다. 특정 부문의 하위 팀도 조회 가능합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "division": {"type": "string", "description": "특정 부문명 (없으면 전체 부문 목록)"},
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "submit_leave",
+            "description": "연차/반차/휴가를 신청합니다. 사용자 확인이 필요합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "leaveType": {
+                        "type": "string",
+                        "enum": ["annual", "half_am", "half_pm", "sick", "special"],
+                        "description": "휴가 유형"
+                    },
+                    "startDate": {"type": "string", "description": "시작일 (YYYY-MM-DD 또는 자연어)"},
+                    "endDate": {"type": "string", "description": "종료일 (없으면 시작일과 동일)"},
+                    "reason": {"type": "string", "description": "사유"},
+                },
+                "required": ["leaveType", "startDate"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "submit_expense",
+            "description": "경비를 정산 신청합니다. 사용자 확인이 필요합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "정산 제목"},
+                    "category": {
+                        "type": "string",
+                        "enum": ["taxi", "meal", "supplies", "travel", "etc"],
+                        "description": "경비 유형"
+                    },
+                    "amount": {"type": "integer", "description": "금액 (원)"},
+                    "expenseDate": {"type": "string", "description": "사용일"},
+                    "description": {"type": "string", "description": "상세 설명"},
+                },
+                "required": ["title", "category", "amount"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_calendar_event",
+            "description": "캘린더에 일정을 추가합니다. 회의, 미팅, 교육 등의 일정을 등록합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "일정 제목"},
+                    "eventDate": {"type": "string", "description": "일정 날짜 (YYYY-MM-DD)"},
+                    "startTime": {"type": "string", "description": "시작 시간 (HH:MM)"},
+                    "endTime": {"type": "string", "description": "종료 시간 (HH:MM, 선택)"},
+                    "location": {"type": "string", "description": "장소 (선택)"},
+                },
+                "required": ["title", "eventDate", "startTime"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "start_survey",
+            "description": "온보딩 설문조사를 시작합니다. 사용자가 설문 메일의 링크를 클릭했거나 '설문 시작'을 요청했을 때 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "quarter": {"type": "integer", "description": "설문 분기 (0~4)"},
+                },
+                "required": ["quarter"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "submit_survey_answer",
+            "description": "설문 질문에 대한 답변을 제출합니다. 5점 척도 질문은 1~5 숫자, 주관식은 텍스트로 답변합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "surveyId": {"type": "string", "description": "설문 응답 ID"},
+                    "step": {"type": "integer", "description": "현재 질문 번호 (1~4)"},
+                    "answer": {"type": "string", "description": "답변 (숫자 또는 텍스트)"},
+                },
+                "required": ["surveyId", "step", "answer"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_glossary",
+            "description": "금융 용어를 검색하여 설명합니다. 정확한 용어명 또는 개념 설명으로 검색할 수 있습니다. 증권, 금융, 투자 관련 용어 질문에 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "term": {"type": "string", "description": "검색할 용어 또는 개념 설명 (예: 'CDO', '주식 공매도', '빚을 모아서 증권 만드는 것')"},
+                },
+                "required": ["term"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_documents",
+            "description": "사내 문서(규정, 가이드, 매뉴얼 등)에서 정보를 검색합니다. 회사 정책, 절차, 복리후생, PC 세팅 등의 질문에 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "검색할 질문/키워드"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
+]
+
+SYSTEM_PROMPT = """\
+당신은 Chat-Ki-S입니다. 키움증권 신입사원의 온보딩을 돕는 사내 챗봇입니다.
+
+## 역할
+- 사용자의 질문에 적절한 도구(함수)를 호출하여 정보를 조회하고 답변합니다.
+- 도구 호출 결과를 바탕으로 친절하고 간결하게 답변합니다.
+- 여러 도구를 조합해서 사용할 수 있습니다.
+
+## 도구 사용 규칙
+- 개인 데이터 질문 (내 연차, 내 메일, 내 프로필 등) → 해당 조회 도구 호출
+- 회사 규정/정책 질문 (연차 규정, 법인카드 기준 등) → search_documents 호출
+- 사람 찾기 → search_employees 호출
+- 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
+- "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
+  ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
+- 금융 용어/개념 질문 → search_glossary 호출
+- 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)
+- ⚠️ "캘린더에 추가해줘", "일정 등록해줘" = add_calendar_event (submit_leave 아님)
+- 설문조사 → start_survey로 시작, 질문 하나씩 진행, submit_survey_answer로 답변 수집
+- 잡담/인사 → 도구 없이 직접 답변
+
+## 설문 진행 규칙
+- start_survey 호출 후 첫 번째 질문을 즉시 물어보세요
+- 사용자가 답변하면 submit_survey_answer로 저장하고 다음 질문을 물어보세요
+- 5점 척도 질문은 "(1: 전혀 아니다 ~ 5: 매우 그렇다)" 안내를 포함하세요
+- 4번째 질문(주관식)은 자유롭게 답변할 수 있도록 안내하세요
+- 모든 질문이 끝나면 감사 인사를 하세요
+
+## 말투
+- 존댓말, 친절하고 간결하게
+- 이모지 최소화, 불렛포인트 사용
+
+## 페이지 컨텍스트
+- 사용자가 현재 보고 있는 화면 정보가 제공될 수 있습니다.
+- "이 메일 요약해줘", "이 공지 설명해줘" 등의 요청은 컨텍스트를 참고하세요.
+"""

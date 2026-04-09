@@ -1,0 +1,155 @@
+[
+  {
+    "id": 1,
+    "category": "agent_action",
+    "input": "내일 연차 써줘",
+    "expected_action": "leave",
+    "expected_params": { "leaveType": "annual" },
+    "description": "연차 신청 의도 감지"
+  },
+  {
+    "id": 2,
+    "category": "agent_action",
+    "input": "오후 반차 쓸래",
+    "expected_action": "leave",
+    "expected_params": { "leaveType": "half_pm" },
+    "description": "오후 반차 의도 감지"
+  },
+  {
+    "id": 3,
+    "category": "agent_action",
+    "input": "연차 며칠 남았어?",
+    "expected_action": "none",
+    "description": "연차 조회는 Agent 액션이 아닌 RAG 질문"
+  },
+  {
+    "id": 4,
+    "category": "agent_action",
+    "input": "택시비 32000원 정산해줘",
+    "expected_action": "expense",
+    "expected_params": { "category": "taxi", "amount": 32000 },
+    "description": "경비 정산 의도 + 금액 파싱"
+  },
+  {
+    "id": 5,
+    "category": "agent_action",
+    "input": "어제 회식비 15만원 정산",
+    "expected_action": "expense",
+    "expected_params": { "category": "meal" },
+    "description": "만원 단위 금액 파싱"
+  },
+  {
+    "id": 6,
+    "category": "agent_action",
+    "input": "공지사항 뭐 있어?",
+    "expected_action": "notices",
+    "description": "공지 조회 의도 감지"
+  },
+  {
+    "id": 7,
+    "category": "agent_action",
+    "input": "메일 확인해줘",
+    "expected_action": "mail",
+    "description": "메일 조회 의도 감지"
+  },
+  {
+    "id": 8,
+    "category": "agent_action",
+    "input": "김신입한테 Git 브랜치 정리 과제 내줘",
+    "expected_action": "assignment",
+    "expected_params": { "assignedToName": "김신입" },
+    "description": "과제 등록 의도 + 대상자 파싱"
+  },
+  {
+    "id": 9,
+    "category": "agent_action",
+    "input": "내 과제 뭐 있어?",
+    "expected_action": "assignments_list",
+    "description": "과제 목록 조회"
+  },
+  {
+    "id": 10,
+    "category": "agent_action",
+    "input": "과제 제출: main은 프로덕션 브랜치입니다",
+    "expected_action": "assignment_submit",
+    "description": "과제 제출 의도 + 내용 파싱"
+  },
+  {
+    "id": 11,
+    "category": "keyword_routing",
+    "input": "연차는 어떻게 사용하나요?",
+    "expected_category": "vacation",
+    "expected_doc": "company_policy_vacation.md",
+    "description": "연차 → 휴가 정책 문서"
+  },
+  {
+    "id": 12,
+    "category": "keyword_routing",
+    "input": "건강검진은 언제 받나요?",
+    "expected_category": "benefits",
+    "expected_doc": "company_policy_benefits.md",
+    "description": "건강검진 → 복리후생 문서"
+  },
+  {
+    "id": 13,
+    "category": "keyword_routing",
+    "input": "Git 브랜치 전략이 어떻게 돼?",
+    "expected_category": "guide_git",
+    "expected_doc": "guide_git.md",
+    "description": "Git → 깃 가이드 문서"
+  },
+  {
+    "id": 14,
+    "category": "keyword_routing",
+    "input": "준법감시 교육은 언제 받아?",
+    "expected_category": "compliance",
+    "expected_doc": "compliance_guide.md",
+    "description": "준법감시 → 컴플라이언스 문서"
+  },
+  {
+    "id": 15,
+    "category": "keyword_routing",
+    "input": "법인카드 한도가 얼마야?",
+    "expected_category": "guide_card",
+    "expected_doc": "guide_corporate_card.md",
+    "description": "법인카드 → 경비 가이드 문서"
+  },
+  {
+    "id": 16,
+    "category": "keyword_routing",
+    "input": "ERP 권한은 어떻게 신청해?",
+    "expected_category": "guide_it",
+    "expected_doc": "guide_it_infra.md",
+    "description": "ERP → IT 인프라 가이드 문서"
+  },
+  {
+    "id": 17,
+    "category": "keyword_routing",
+    "input": "버디는 언제까지야?",
+    "expected_category": "buddy",
+    "expected_doc": "onboarding_buddy.md",
+    "description": "버디 → 버디 제도 문서"
+  },
+  {
+    "id": 18,
+    "category": "keyword_routing",
+    "input": "오늘 날씨 어때?",
+    "expected_category": null,
+    "description": "매칭 실패 → fallback"
+  },
+  {
+    "id": 19,
+    "category": "agent_action",
+    "input": "복리후생 알려줘",
+    "expected_action": "none",
+    "description": "정보 조회는 RAG 질문이지 Agent 액션 아님"
+  },
+  {
+    "id": 20,
+    "category": "agent_action",
+    "input": "4월 10일 연차 신청해줘",
+    "expected_action": "leave",
+    "expected_params": { "leaveType": "annual", "startDate": "2026-04-10" },
+    "description": "특정 날짜 연차 신청"
+  }
+]
