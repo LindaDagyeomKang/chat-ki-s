@@ -360,6 +360,7 @@ SYSTEM_PROMPT = """\
 - 사람 찾기 → search_employees 호출
 - 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
 - "XX님 휴가셔?", "XX님 출근하셨나?" → check_leave_status(name="XX") 호출. 절대 추측하지 마세요!
+- "우리팀 연차 쓰는 사람?", "팀원 중 휴가인 사람?" → check_leave_status(name="우리팀") 호출
 - "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
   ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
 - 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)

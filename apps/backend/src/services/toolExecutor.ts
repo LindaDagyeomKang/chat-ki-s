@@ -226,20 +226,50 @@ export async function executeTool(
       const checkName = (args.name || '').trim()
       if (!checkName) return { result: '직원 이름을 입력해 주세요.' }
 
-      // 직원 찾기 (정확 매칭 우선)
+      const todayStr = new Date().toISOString().split('T')[0]
+      const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
+
+      // "우리팀", "우리 팀", "팀원" 등 팀 전체 조회
+      const teamKeywords = ['우리팀', '우리 팀', '팀원', '우리부서', '우리 부서', '같은팀', '같은 팀']
+      if (teamKeywords.some(kw => checkName.includes(kw))) {
+        const myTeam = ctx.userTeam
+        if (!myTeam) return { result: '소속 팀 정보를 확인할 수 없습니다.' }
+
+        // 같은 팀 직원 목록
+        const teamMembers = await db.select().from(employees).where(eq(employees.team, myTeam))
+        const onLeave: string[] = []
+
+        for (const member of teamMembers) {
+          const memberUser = (await db.select().from(users).where(eq(users.name, member.name)).limit(1))[0]
+          if (!memberUser) continue
+          const leave = await db.select().from(leaveRequests)
+            .where(and(
+              eq(leaveRequests.userId, memberUser.id),
+              lte(leaveRequests.startDate, todayStr),
+              gte(leaveRequests.endDate, todayStr),
+            ))
+            .limit(1)
+          if (leave.length > 0) {
+            const l = leave[0] as any
+            const leaveLabel = typeLabels[l.leaveType] || l.leaveType
+            onLeave.push(`${member.name} ${member.rank || ''} — ${leaveLabel} (${l.startDate}~${l.endDate})`)
+          }
+        }
+
+        if (onLeave.length === 0) return { result: `${myTeam} 팀원 중 오늘 휴가인 사람은 없습니다.` }
+        return { result: `${myTeam} 오늘 휴가 현황 (${onLeave.length}명):\n${onLeave.map((s, i) => `${i + 1}. ${s}`).join('\n')}` }
+      }
+
+      // 개인 검색 (기존 로직)
       let target = (await db.select().from(employees).where(eq(employees.name, checkName)).limit(1))[0]
       if (!target) {
         target = (await db.select().from(employees).where(ilike(employees.name, `%${checkName}%`)).orderBy(sql`LENGTH(name)`).limit(1))[0]
       }
       if (!target) return { result: `"${checkName}" 직원을 찾을 수 없습니다.` }
 
-      // users 테이블에서 해당 직원의 user_id 찾기
       const targetUser = (await db.select().from(users).where(eq(users.name, target.name)).limit(1))[0]
 
-      const todayStr = new Date().toISOString().split('T')[0]
-
       if (targetUser) {
-        // leave_requests에서 오늘 날짜에 승인된 휴가가 있는지 확인
         const todayLeave = await db.select().from(leaveRequests)
           .where(and(
             eq(leaveRequests.userId, targetUser.id),
@@ -250,14 +280,12 @@ export async function executeTool(
 
         if (todayLeave.length > 0) {
           const l = todayLeave[0] as any
-          const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
           const leaveLabel = typeLabels[l.leaveType] || l.leaveType
           const statusLabel = l.status === 'approved' ? '승인' : l.status === 'pending' ? '승인 대기중' : l.status
           return { result: `${target.name} ${target.rank || ''}님은 오늘 ${leaveLabel} 중입니다. (${statusLabel}, ${l.startDate}~${l.endDate})` }
         }
       }
 
-      // 휴가 아님
       return { result: `${target.name} ${target.rank || ''}님은 오늘 휴가가 아닙니다. (${target.team || ''} 소속)` }
     }
 
