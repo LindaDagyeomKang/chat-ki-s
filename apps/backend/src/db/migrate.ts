@@ -245,11 +245,15 @@ CREATE TABLE IF NOT EXISTS documents (
   author VARCHAR(100) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'submitted',
   approver_id UUID REFERENCES users(id),
+  file_name VARCHAR(255),
   submitted_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ═══ ALTER statements (must come after all CREATE TABLEs) ═══
+
+-- Add file_name to documents
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_name VARCHAR(255);
 
 -- Add missing mails columns (for existing DBs)
 ALTER TABLE mails ADD COLUMN IF NOT EXISTS from_text TEXT DEFAULT '';

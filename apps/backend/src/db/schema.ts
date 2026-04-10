@@ -272,6 +272,7 @@ export const documents = pgTable('documents', {
   author: varchar('author', { length: 100 }).notNull(), // 원 작성자 (ex. 구수아 과장)
   status: varchar('status', { length: 20 }).notNull().default('submitted'), // 'draft' | 'submitted' | 'approved' | 'rejected'
   approverId: uuid('approver_id').references(() => users.id),
+  fileName: varchar('file_name', { length: 255 }),
   submittedAt: timestamp('submitted_at').defaultNow(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })

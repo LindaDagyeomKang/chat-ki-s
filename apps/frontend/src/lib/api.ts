@@ -387,7 +387,7 @@ export async function approveExpense(id: string, status: 'approved' | 'rejected'
 export interface Document {
   id: string; userId: string; title: string; category: string; content: string
   author: string; status: string; approverId: string | null
-  submittedAt: string; createdAt: string
+  fileName: string | null; submittedAt: string; createdAt: string
 }
 
 export async function getDocuments(category?: string, keyword?: string): Promise<Document[]> {

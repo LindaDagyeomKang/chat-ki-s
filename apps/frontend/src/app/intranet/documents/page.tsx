@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getDocuments, getDocument } from '@/lib/api'
+import { getDocuments } from '@/lib/api'
 import type { Document } from '@/lib/api'
 
 const CATEGORIES = ['전체', 'AB테스트', 'KPI', '알고리즘', '고객분석', '콘텐츠', '주간동향']
@@ -27,30 +27,28 @@ export default function DocumentsPage() {
     getDocuments(cat, kw).then(setDocs).catch(() => {})
   }, [activeCategory, searchKeyword])
 
-  // URL에 id가 있으면 상세 열기
   useEffect(() => {
     const id = searchParams.get('id')
-    if (id) {
-      getDocument(id).then(setSelectedDoc).catch(() => {})
+    if (id && docs.length > 0) {
+      const found = docs.find(d => d.id === id)
+      if (found) setSelectedDoc(found)
     }
-  }, [searchParams])
+  }, [searchParams, docs])
 
   return (
     <div className="flex flex-1 min-h-0">
       {/* 목록 */}
-      <div className={`${selectedDoc ? 'w-[400px]' : 'flex-1'} flex flex-col border-r border-gray-100 bg-white`}>
+      <div className={`${selectedDoc ? 'w-[420px]' : 'flex-1 max-w-3xl mx-auto'} flex flex-col border-r border-gray-100 bg-white`}>
         <div className="p-6 border-b border-gray-100">
           <h1 className="text-lg font-semibold mb-4" style={{ color: '#111547' }}>결재함</h1>
-          {/* 검색 */}
           <input
             type="text"
-            placeholder="보고서 검색 (제목, 작성자, 내용)"
+            placeholder="보고서 검색"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             className="w-full px-4 py-2.5 text-sm rounded-xl outline-none mb-4"
             style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }}
           />
-          {/* 카테고리 탭 */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((cat) => (
               <button
@@ -68,7 +66,6 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* 문서 목록 */}
         <div className="flex-1 overflow-y-auto">
           {docs.length === 0 ? (
             <p className="text-center py-12 text-sm" style={{ color: '#94A3B8' }}>문서가 없습니다</p>
@@ -79,15 +76,20 @@ export default function DocumentsPage() {
                 <div
                   key={d.id}
                   onClick={() => setSelectedDoc(d)}
-                  className="px-6 py-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="px-6 py-5 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
                   style={{ background: selectedDoc?.id === d.id ? '#FDF2F8' : undefined }}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: '#F1F5F9', color: '#64748B' }}>{d.category}</span>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: '#111547' }}>{d.title}</p>
+                      <p className="text-xs mt-1.5" style={{ color: '#94A3B8' }}>
+                        {d.author} · {new Date(d.submittedAt).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                    <span className="flex-shrink-0 ml-3 px-2.5 py-1 rounded-full text-[10px] font-semibold" style={{ background: st.bg, color: st.color }}>
+                      {st.label}
+                    </span>
                   </div>
-                  <p className="text-sm font-medium truncate mt-1" style={{ color: '#111547' }}>{d.title}</p>
-                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>{d.author} · {new Date(d.submittedAt).toLocaleDateString('ko-KR')}</p>
                 </div>
               )
             })
@@ -98,27 +100,45 @@ export default function DocumentsPage() {
       {/* 상세 보기 */}
       {selectedDoc && (
         <div className="flex-1 overflow-y-auto bg-white p-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={() => setSelectedDoc(null)} className="text-sm" style={{ color: '#64748B' }}>← 목록으로</button>
-              <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ ...STATUS_LABELS[selectedDoc.status] || STATUS_LABELS.submitted, background: (STATUS_LABELS[selectedDoc.status] || STATUS_LABELS.submitted).bg, color: (STATUS_LABELS[selectedDoc.status] || STATUS_LABELS.submitted).color }}>
-                {(STATUS_LABELS[selectedDoc.status] || STATUS_LABELS.submitted).label}
-              </span>
+          <div className="max-w-2xl mx-auto">
+            <button onClick={() => setSelectedDoc(null)} className="text-sm mb-6" style={{ color: '#94A3B8' }}>← 목록으로</button>
+
+            <div className="mb-8">
+              <h1 className="text-xl font-semibold" style={{ color: '#111547' }}>{selectedDoc.title}</h1>
+              <div className="flex items-center gap-4 mt-3">
+                <p className="text-sm" style={{ color: '#64748B' }}>{selectedDoc.author}</p>
+                <span style={{ color: '#E2E8F0' }}>|</span>
+                <p className="text-sm" style={{ color: '#64748B' }}>
+                  {new Date(selectedDoc.submittedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+                <span style={{ color: '#E2E8F0' }}>|</span>
+                {(() => {
+                  const st = STATUS_LABELS[selectedDoc.status] || STATUS_LABELS.submitted
+                  return <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                })()}
+              </div>
             </div>
 
-            <div className="mb-6">
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: '#F1F5F9', color: '#64748B' }}>{selectedDoc.category}</span>
-              <h1 className="text-xl font-semibold mt-2" style={{ color: '#111547' }}>{selectedDoc.title}</h1>
-              <p className="text-sm mt-2" style={{ color: '#64748B' }}>
-                {selectedDoc.author} · {new Date(selectedDoc.submittedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl" style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: '#334155', fontFamily: 'inherit' }}>
-                {selectedDoc.content}
-              </pre>
-            </div>
+            {/* 첨부파일 */}
+            {(selectedDoc as any).fileName && (
+              <div className="mb-8 p-4 rounded-xl flex items-center justify-between" style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
+                <div className="flex items-center gap-3">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm-1 14.5v-9l6 4.5-6 4.5z" fill="#94A3B8"/></svg>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#334155' }}>{(selectedDoc as any).fileName}</p>
+                    <p className="text-xs" style={{ color: '#94A3B8' }}>첨부파일</p>
+                  </div>
+                </div>
+                <a
+                  href={`/documents/${encodeURIComponent((selectedDoc as any).fileName)}`}
+                  download
+                  className="text-xs font-medium px-4 py-2 rounded-lg"
+                  style={{ background: '#E1007F', color: '#FFF' }}
+                >
+                  다운로드
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
