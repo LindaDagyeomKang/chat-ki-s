@@ -261,6 +261,25 @@ export const surveyResponses = pgTable('survey_responses', {
 })
 
 // ──────────────────────────────────────
+// 결재함 (보고서/기안)
+// ──────────────────────────────────────
+export const documents = pgTable('documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  category: varchar('category', { length: 50 }).notNull(), // 'AB테스트' | 'KPI' | '알고리즘' | '고객분석' | '콘텐츠' | '주간동향'
+  content: text('content').notNull(),
+  author: varchar('author', { length: 100 }).notNull(), // 원 작성자 (ex. 구수아 과장)
+  status: varchar('status', { length: 20 }).notNull().default('submitted'), // 'draft' | 'submitted' | 'approved' | 'rejected'
+  approverId: uuid('approver_id').references(() => users.id),
+  submittedAt: timestamp('submitted_at').defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+export type DocumentRow = typeof documents.$inferSelect
+export type NewDocument = typeof documents.$inferInsert
+
+// ──────────────────────────────────────
 // Agent 실행 로그
 // ──────────────────────────────────────
 export const agentLogs = pgTable('agent_logs', {

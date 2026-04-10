@@ -271,6 +271,20 @@ CREATE TABLE IF NOT EXISTS survey_responses (
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 결재함 (보고서/기안)
+CREATE TABLE IF NOT EXISTS documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  content TEXT NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'submitted',
+  approver_id UUID REFERENCES users(id),
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 `
 
 export async function runMigrations(): Promise<void> {
@@ -287,6 +301,7 @@ export async function runMigrations(): Promise<void> {
       if (rows.length > 0) {
         // Clear existing data for reseed (FK order)
         await pool.query(`
+          DELETE FROM documents;
           DELETE FROM room_reservations; DELETE FROM meeting_rooms;
           DELETE FROM calendar_events; DELETE FROM survey_responses; DELETE FROM survey_questions;
           DELETE FROM mails; DELETE FROM assignments; DELETE FROM notices;
