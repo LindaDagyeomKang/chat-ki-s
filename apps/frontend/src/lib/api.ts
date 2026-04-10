@@ -222,6 +222,7 @@ export interface Mail {
   cc?: string
   isRead: boolean
   starred?: boolean
+  receivedAt: string
   createdAt: string
 }
 

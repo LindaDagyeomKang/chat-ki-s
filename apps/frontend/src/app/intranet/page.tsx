@@ -67,7 +67,7 @@ export default function IntranetDashboard() {
 
   // 당일 수신 메일 수
   const todayStr = new Date().toDateString()
-  const todayMails = mails.filter((m) => new Date(m.createdAt).toDateString() === todayStr).length
+  const todayMails = mails.filter((m) => new Date(m.receivedAt || m.createdAt).toDateString() === todayStr).length
 
   // 오늘의 일정 수 (주간 캘린더 이벤트 기준)
   const statValues = [
@@ -198,7 +198,7 @@ export default function IntranetDashboard() {
                       <span className="text-xs font-medium" style={{ color: '#111547' }}>{m.subject}</span>
                     </div>
                     <span style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>
-                      {new Date(m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                      {new Date(m.receivedAt || m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                     </span>
                   </div>
                 ))

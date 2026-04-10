@@ -390,7 +390,7 @@ export default function MailsPage() {
                       >{m.starred ? '★' : '☆'}</span>
                       <span className="truncate" style={{ color: selected?.id === m.id || !m.isRead ? '#E1007F' : '#111547', fontSize: 13, fontWeight: 500 }}>보낸사람: {extractSenderLabel(m)}</span>
                     </div>
-                    <span className="flex-shrink-0" style={{ color: 'rgba(17,21,71,0.40)', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}>{formatTime(m.createdAt)}</span>
+                    <span className="flex-shrink-0" style={{ color: 'rgba(17,21,71,0.40)', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}>{formatTime(m.receivedAt || m.createdAt)}</span>
                   </div>
                   <span style={{ color: '#111547', fontSize: 14, fontWeight: 500, lineHeight: '20px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.subject}</span>
                   <span style={{ color: 'rgba(17,21,71,0.60)', fontSize: 12, fontWeight: 500, lineHeight: '16px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.body.slice(0, 60)}...</span>
@@ -452,7 +452,7 @@ export default function MailsPage() {
                         <td className="py-2.5 pr-4 align-top" style={{ color: '#E1007F', fontSize: 13, fontWeight: 600, width: 50 }}>제목</td>
                         <td className="py-2.5" style={{ color: '#111547', fontSize: 14, fontWeight: 500 }}>{selected.subject}</td>
                         <td className="py-2.5 text-right align-top" style={{ color: '#94A3B8', fontSize: 11, fontFamily: 'Manrope', whiteSpace: 'nowrap' }}>
-                          {new Date(selected.createdAt).toLocaleDateString('ko-KR')} {new Date(selected.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                          {new Date(selected.receivedAt || selected.createdAt).toLocaleDateString('ko-KR')} {new Date(selected.receivedAt || selected.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #F1F5F9' }}>

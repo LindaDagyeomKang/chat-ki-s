@@ -9,7 +9,7 @@ export async function mailRoutes(app: FastifyInstance) {
     const { sub } = request.user as { sub: string }
     return db.select().from(mails)
       .where(and(eq(mails.toId, sub), eq(mails.deleted, false), eq(mails.isDraft, false)))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 보낸 편지함
@@ -17,7 +17,7 @@ export async function mailRoutes(app: FastifyInstance) {
     const { sub } = request.user as { sub: string }
     return db.select().from(mails)
       .where(and(eq(mails.fromId, sub), eq(mails.deleted, false), eq(mails.isDraft, false)))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 별표 편지함
@@ -29,7 +29,7 @@ export async function mailRoutes(app: FastifyInstance) {
         eq(mails.starred, true),
         eq(mails.deleted, false),
       ))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 임시 보관함
@@ -37,7 +37,7 @@ export async function mailRoutes(app: FastifyInstance) {
     const { sub } = request.user as { sub: string }
     return db.select().from(mails)
       .where(and(eq(mails.fromId, sub), eq(mails.isDraft, true), eq(mails.deleted, false)))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 휴지통
@@ -48,7 +48,7 @@ export async function mailRoutes(app: FastifyInstance) {
         or(eq(mails.toId, sub), eq(mails.fromId, sub)),
         eq(mails.deleted, true),
       ))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 전체 메일
@@ -56,7 +56,7 @@ export async function mailRoutes(app: FastifyInstance) {
     const { sub } = request.user as { sub: string }
     return db.select().from(mails)
       .where(or(eq(mails.toId, sub), eq(mails.fromId, sub)))
-      .orderBy(desc(mails.createdAt))
+      .orderBy(desc(mails.receivedAt))
   })
 
   // 메일 상세 + 읽음 처리
