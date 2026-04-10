@@ -29,14 +29,8 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS chat_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
-  sources JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- chat_logs 삭제
+DROP TABLE IF EXISTS chat_logs;
 
 CREATE TABLE IF NOT EXISTS feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -49,7 +43,6 @@ CREATE TABLE IF NOT EXISTS feedback (
 
 -- Drop the FK constraint if it exists (from earlier schema versions where
 -- message_id incorrectly referenced only messages.id, conflicting with
--- chat_logs IDs passed from /api/chat)
 ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_message_id_fkey;
 
 -- Add role column to users (mentor/mentee)
@@ -310,7 +303,7 @@ export async function runMigrations(): Promise<void> {
           DELETE FROM calendar_events; DELETE FROM survey_responses; DELETE FROM survey_questions;
           DELETE FROM mails; DELETE FROM assignments; DELETE FROM notices;
           DELETE FROM leave_requests; DELETE FROM expenses;
-          DELETE FROM good_answers; DELETE FROM feedback; DELETE FROM chat_logs;
+          DELETE FROM good_answers; DELETE FROM feedback;
           DELETE FROM messages; DELETE FROM conversations;
           DELETE FROM employees; DELETE FROM users;
         `)

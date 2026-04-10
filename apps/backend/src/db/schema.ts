@@ -4,7 +4,6 @@ import {
   varchar,
   text,
   timestamp,
-  jsonb,
   integer,
   date,
   boolean as pgBoolean,
@@ -46,15 +45,6 @@ export const messages = pgTable('messages', {
 
 export type MessageRow = typeof messages.$inferSelect
 export type NewMessage = typeof messages.$inferInsert
-
-export const chatLogs = pgTable('chat_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id),
-  question: text('question').notNull(),
-  answer: text('answer').notNull(),
-  sources: jsonb('sources').$type<Array<{ title: string; content: string }>>(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-})
 
 export const feedback = pgTable('feedback', {
   id: uuid('id').primaryKey().defaultRandom(),
