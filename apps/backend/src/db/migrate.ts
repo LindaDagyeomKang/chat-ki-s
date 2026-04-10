@@ -61,6 +61,43 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'me
 -- Add employee_ref_id column to users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_ref_id UUID;
 
+-- Add missing mails columns (for existing DBs)
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS from_text TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS to_text TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS cc TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS starred BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+
+-- Add missing employees column
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT '온라인';
+
+-- Convert mails.is_read from varchar to boolean if needed
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'mails' AND column_name = 'is_read' AND data_type = 'character varying'
+  ) THEN
+    ALTER TABLE mails ALTER COLUMN is_read DROP DEFAULT;
+    ALTER TABLE mails ALTER COLUMN is_read TYPE BOOLEAN USING (is_read = 'true');
+    ALTER TABLE mails ALTER COLUMN is_read SET DEFAULT false;
+  END IF;
+END $$;
+
+-- Convert notices.pinned from varchar to boolean if needed
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'notices' AND column_name = 'pinned' AND data_type = 'character varying'
+  ) THEN
+    ALTER TABLE notices ALTER COLUMN pinned DROP DEFAULT;
+    ALTER TABLE notices ALTER COLUMN pinned TYPE BOOLEAN USING (pinned = 'true');
+    ALTER TABLE notices ALTER COLUMN pinned SET DEFAULT false;
+  END IF;
+END $$;
+
 -- Intranet: 공지게시판
 CREATE TABLE IF NOT EXISTS notices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -68,7 +105,7 @@ CREATE TABLE IF NOT EXISTS notices (
   content TEXT NOT NULL,
   category VARCHAR(50) NOT NULL DEFAULT '일반',
   author_id UUID REFERENCES users(id),
-  pinned VARCHAR(5) NOT NULL DEFAULT 'false',
+  pinned BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -109,7 +146,13 @@ CREATE TABLE IF NOT EXISTS mails (
   to_id UUID NOT NULL REFERENCES users(id),
   subject VARCHAR(255) NOT NULL,
   body TEXT NOT NULL,
-  is_read VARCHAR(5) NOT NULL DEFAULT 'false',
+  from_text TEXT DEFAULT '',
+  to_text TEXT DEFAULT '',
+  cc TEXT DEFAULT '',
+  is_read BOOLEAN NOT NULL DEFAULT false,
+  starred BOOLEAN NOT NULL DEFAULT false,
+  deleted BOOLEAN NOT NULL DEFAULT false,
+  is_draft BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -145,7 +188,8 @@ CREATE TABLE IF NOT EXISTS employees (
   email VARCHAR(100),
   phone VARCHAR(30),
   mbti VARCHAR(10),
-  duty TEXT
+  duty TEXT,
+  status VARCHAR(20) DEFAULT '온라인'
 );
 
 -- Intranet: 품의/경비 정산
@@ -161,6 +205,74 @@ CREATE TABLE IF NOT EXISTS expenses (
   approver_id UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 캘린더 일정
+CREATE TABLE IF NOT EXISTS calendar_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT '',
+  event_date DATE NOT NULL,
+  start_time VARCHAR(10) NOT NULL,
+  end_time VARCHAR(10) DEFAULT '',
+  location VARCHAR(100) DEFAULT '',
+  color VARCHAR(20) DEFAULT '#3B82F6',
+  is_company BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 회의실
+CREATE TABLE IF NOT EXISTS meeting_rooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(50) NOT NULL UNIQUE,
+  floor VARCHAR(10) DEFAULT '',
+  capacity INTEGER DEFAULT 0,
+  equipment TEXT DEFAULT '',
+  color VARCHAR(20) DEFAULT '#3B82F6'
+);
+
+-- 회의실 예약
+CREATE TABLE IF NOT EXISTS room_reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID NOT NULL REFERENCES meeting_rooms(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  reserve_date DATE NOT NULL,
+  start_time VARCHAR(10) NOT NULL,
+  end_time VARCHAR(10) NOT NULL,
+  attendees TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 온보딩 설문 질문
+CREATE TABLE IF NOT EXISTS survey_questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quarter INTEGER NOT NULL,
+  quarter_label VARCHAR(50) NOT NULL,
+  stage_name VARCHAR(100) NOT NULL,
+  goal VARCHAR(200) NOT NULL,
+  q1 TEXT NOT NULL,
+  q2 TEXT NOT NULL,
+  q3 TEXT NOT NULL,
+  free_question TEXT NOT NULL
+);
+
+-- 온보딩 설문 응답
+CREATE TABLE IF NOT EXISTS survey_responses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  quarter INTEGER NOT NULL,
+  q1_score INTEGER,
+  q2_score INTEGER,
+  q3_score INTEGER,
+  free_answer TEXT,
+  analysis TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  current_step INTEGER DEFAULT 0,
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 `
 
@@ -218,6 +330,19 @@ export async function runMigrations(): Promise<void> {
         ('${hrUserId}', '${defaultUserId}', 'IT 시스템 권한 신청 안내', '전호철님,\n\nIT 시스템 권한 신청 방법 안내드립니다.\n\n■ 신청 경로\n인트라넷 상단 → 인사시스템 → IT 서비스 데스크 → 권한 신청\n\n■ 필수 신청 항목\n- 그룹웨어/메일 계정\n- VPN 접속 권한\n- ERP 시스템 접근\n- 업무 관련 DB 접근 (팀장 승인 필요)\n\n모든 권한은 소속 팀장 승인 후 IT 지원팀에서 처리됩니다.\n\n이소현 드림')
       `)
       console.log('Seed mails created')
+
+      // ── 회의실 ──
+      await pool.query(`
+        INSERT INTO meeting_rooms (name, floor, capacity, equipment, color) VALUES
+        ('대회의실 A', '3F', 20, '프로젝터, 화이트보드, 화상회의', '#3B82F6'),
+        ('대회의실 B', '3F', 20, '프로젝터, 화이트보드', '#10B981'),
+        ('소회의실 1', '4F', 6, '모니터, 화이트보드', '#F59E0B'),
+        ('소회의실 2', '4F', 6, '모니터', '#EF4444'),
+        ('소회의실 3', '5F', 4, '모니터', '#8B5CF6'),
+        ('임원회의실', '6F', 12, '프로젝터, 화상회의, 음향시스템', '#EC4899')
+        ON CONFLICT (name) DO NOTHING
+      `)
+      console.log('Seed meeting rooms created')
     }
   } finally {
     await pool.end()
