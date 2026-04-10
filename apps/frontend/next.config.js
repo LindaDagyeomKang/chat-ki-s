@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   transpilePackages: ['@chat-ki-s/shared'],
   typescript: {
     ignoreBuildErrors: true,
