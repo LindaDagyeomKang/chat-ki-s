@@ -3,7 +3,7 @@
  * LLM이 요청한 함수를 실행하고 결과를 반환합니다.
  */
 import { db } from '../db'
-import { employees, users, mails, notices, leaveRequests, expenses, assignments, calendarEvents, surveyQuestions, surveyResponses, meetingRooms, roomReservations } from '../db/schema'
+import { employees, users, mails, notices, leaveRequests, expenses, assignments, calendarEvents, surveyQuestions, surveyResponses, meetingRooms, roomReservations, documents } from '../db/schema'
 import { eq, desc, asc, and, gte, lte, or, ilike, sql } from 'drizzle-orm'
 
 const EXEC_RANKS = ['사장', '부사장', '전무', '상무', '이사']
@@ -187,6 +187,21 @@ export async function executeTool(
       if (events.length === 0) return { result: `${dateLabel}에${companyOnly ? ' 전사' : ''} 등록된 일정이 없습니다.` }
       const list = events.map((e: any, i: number) => `${i + 1}. ${e.startTime}${e.endTime ? `~${e.endTime}` : ''} ${e.title} (${e.location || '장소 미정'})`).join('\n')
       return { result: `${dateLabel}${companyOnly ? ' 전사' : ''} 일정 ${events.length}건:\n${list}` }
+    }
+
+    case 'get_documents': {
+      const cat = (args.category || '').trim()
+      const kw = (args.keyword || '').trim()
+      let q = db.select().from(documents).orderBy(desc(documents.submittedAt)).limit(10)
+      if (cat) q = q.where(eq(documents.category, cat)) as typeof q
+      if (kw) q = q.where(or(ilike(documents.title, `%${kw}%`), ilike(documents.content, `%${kw}%`), ilike(documents.author, `%${kw}%`))) as typeof q
+      const rows = await q
+      if (rows.length === 0) return { result: '해당하는 보고서/기안 문서가 없습니다.' }
+      const statusLabels: Record<string, string> = { draft: '임시저장', submitted: '제출됨', approved: '승인', rejected: '반려' }
+      const list = rows.map((d, i) => `${i + 1}. [${d.category}] ${d.title} — ${d.author} (${statusLabels[d.status] ?? d.status}, ${d.submittedAt ? new Date(d.submittedAt).toLocaleDateString('ko-KR') : ''})`).join('\n')
+      // 보고서 내용도 포함 (양식 참고용)
+      const details = rows.map(d => `### ${d.title} (${d.author})\n${d.content.substring(0, 500)}...`).join('\n\n')
+      return { result: `결재함 보고서 ${rows.length}건:\n${list}\n\n--- 상세 내용 ---\n${details}` }
     }
 
     case 'get_notices': {

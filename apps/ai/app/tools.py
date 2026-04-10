@@ -320,6 +320,28 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_documents",
+            "description": "결재함에서 보고서/기안 문서를 조회합니다. 업무 결재 상태 확인, 보고서 내용 검색, 보고서 양식 참고 등에 사용합니다. '결재 어디까지 됐어?', 'AB테스트 보고서 찾아줘', '보고서 양식 초안 잡아줘' 같은 요청에 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "enum": ["AB테스트", "KPI", "알고리즘", "고객분석", "콘텐츠", "주간동향"],
+                        "description": "보고서 카테고리로 필터 (선택)"
+                    },
+                    "keyword": {
+                        "type": "string",
+                        "description": "제목/내용/작성자 키워드 검색 (선택)"
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
 ]
 
 SYSTEM_PROMPT = """\
@@ -339,6 +361,7 @@ SYSTEM_PROMPT = """\
 - "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
   ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
 - 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)
+- 결재함/보고서 관련 질문 (결재 상태, 보고서 양식, 업무 히스토리) → get_documents 호출
 - 금융 용어/개념 질문 → search_glossary 호출
 - 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)
 - ⚠️ "캘린더에 추가해줘", "일정 등록해줘" = add_calendar_event (submit_leave 아님)

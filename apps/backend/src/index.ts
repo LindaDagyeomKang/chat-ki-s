@@ -20,6 +20,7 @@ import { agentLogsRoutes } from './routes/agentLogsRoute'
 import { employeeRoutes } from './routes/employees'
 import { calendarRoutes } from './routes/calendar'
 import { roomRoutes } from './routes/rooms'
+import { documentRoutes } from './routes/documents'
 import { runMigrations } from './db/migrate'
 
 const app = Fastify({ logger: true })
@@ -70,6 +71,7 @@ app.register(agentLogsRoutes)
 app.register(employeeRoutes)
 app.register(calendarRoutes)
 app.register(roomRoutes)
+app.register(documentRoutes)
 
 const start = async () => {
   try {
