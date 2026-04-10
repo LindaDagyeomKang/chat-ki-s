@@ -251,7 +251,7 @@ export default function AddressBookPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <a href="/intranet/mails" onClick={(e) => e.stopPropagation()} className="flex-1 bg-pink-600 text-white py-2 rounded-full font-medium hover:bg-pink-700 transition-colors text-sm text-center">
+                      <a href={`/intranet/mails?compose=${emp.employeeId}`} onClick={(e) => e.stopPropagation()} className="flex-1 bg-pink-600 text-white py-2 rounded-full font-medium hover:bg-pink-700 transition-colors text-sm text-center">
                         메일 보내기
                       </a>
                       <button onClick={(e) => e.stopPropagation()} className="p-2 hover:bg-gray-100 rounded-full transition-colors">

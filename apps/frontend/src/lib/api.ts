@@ -250,7 +250,7 @@ export async function getMail(id: string): Promise<Mail> {
   return apiFetch<Mail>(`/api/mails/${id}`)
 }
 
-export async function toggleStarMail(id: string): Promise<{ starred: string }> {
+export async function toggleStarMail(id: string): Promise<{ starred: boolean }> {
   return apiFetch(`/api/mails/${id}/star`, { method: 'PATCH', body: '{}' })
 }
 

@@ -65,6 +65,7 @@ export const notices = pgTable('notices', {
   category: varchar('category', { length: 50 }).notNull().default('일반'),
   authorId: uuid('author_id').references(() => users.id),
   pinned: pgBoolean('pinned').notNull().default(false),
+  views: integer('views').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { notices } from '../db/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 
 export async function noticeRoutes(app: FastifyInstance) {
   // 공지 목록 조회
@@ -18,7 +18,9 @@ export async function noticeRoutes(app: FastifyInstance) {
     const { id } = request.params
     const result = await db.select().from(notices).where(eq(notices.id, id))
     if (result.length === 0) return reply.status(404).send({ error: '공지를 찾을 수 없습니다' })
-    return result[0]
+    // 조회수 증가
+    await db.update(notices).set({ views: sql`views + 1` }).where(eq(notices.id, id))
+    return { ...result[0], views: (result[0].views ?? 0) + 1 }
   })
 
   // 공지 작성 (mentor만)

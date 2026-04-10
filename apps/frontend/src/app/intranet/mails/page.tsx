@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getInbox, getSentMails, getStarredMails, getDraftMails, getTrashMails, getMail, sendMail, toggleStarMail, deleteMail, restoreMail } from '@/lib/api'
 import type { Mail } from '@/lib/api'
 import { usePageContext } from '@/contexts/PageContext'
@@ -74,6 +75,7 @@ function renderEmailField(text: string) {
 }
 
 export default function MailsPage() {
+  const searchParams = useSearchParams()
   const [mails, setMails] = useState<Mail[]>([])
   const [selected, setSelected] = useState<Mail | null>(null)
   const [activeFolder, setActiveFolder] = useState('inbox')
@@ -87,6 +89,16 @@ export default function MailsPage() {
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all')
   const { userName, userDept, userRole } = useUser()
   const { setPageContext, clearPageContext } = usePageContext()
+
+  // URL에서 compose 파라미터 감지 (주소록에서 메일보내기)
+  useEffect(() => {
+    const composeId = searchParams.get('compose')
+    if (composeId) {
+      setComposing(true)
+      setToId(composeId)
+      setSelected(null)
+    }
+  }, [searchParams])
 
   // 메일 선택 시 페이지 컨텍스트 업데이트
   useEffect(() => {
@@ -203,7 +215,7 @@ export default function MailsPage() {
   async function handleSelect(mail: Mail) {
     setSelected(mail); setComposing(false)
     if (!mail.isRead) {
-      try { await getMail(mail.id); setMails((prev) => prev.map((m) => m.id === mail.id ? { ...m, isRead: 'true' } : m)) } catch {}
+      try { await getMail(mail.id); setMails((prev) => prev.map((m) => m.id === mail.id ? { ...m, isRead: true } : m)) } catch {}
     }
   }
 
@@ -435,7 +447,7 @@ export default function MailsPage() {
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-full"><svg className="w-5 h-5" style={{ color: 'rgba(17,21,71,0.60)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg></button>
+                    <button className="p-2 rounded-full" title="인쇄" onClick={() => window.print()}><svg className="w-5 h-5" style={{ color: 'rgba(17,21,71,0.60)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg></button>
                     {activeFolder === 'trash' ? (
                       <button onClick={() => selected && handleRestore(selected.id)} className="p-2 rounded-full" title="복원"><svg className="w-5 h-5" style={{ color: '#10B981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 010 10H9m4-10l-4-4m4 4l-4 4" /></svg></button>
                     ) : (

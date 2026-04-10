@@ -10,7 +10,7 @@ import { useUser } from '@/hooks/useUser'
 
 const STAT_CARDS = [
   { label: '전자우편', iconColor: '#3B82F6', iconBg: '#DBEAFE', href: '/intranet/mails', icon: <svg width="20" height="16" viewBox="0 0 20 16" fill="none"><path d="M18 0H2C0.9 0 0.01 0.9 0.01 2L0 14C0 15.1 0.9 16 2 16H18C19.1 16 20 15.1 20 14V2C20 0.9 19.1 0 18 0ZM18 4L10 9L2 4V2L10 7L18 2V4Z" fill="#3B82F6"/></svg> },
-  { label: '전자결재', iconColor: '#E1007F', iconBg: 'rgba(225,0,127,0.10)', href: '/intranet/expenses', icon: <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><path d="M10 0H2C0.9 0 0.01 0.9 0.01 2L0 18C0 19.1 0.89 20 1.99 20H14C15.1 20 16 19.1 16 18V6L10 0ZM2 18V2H9V7H14V18H2ZM4 14H12V16H4V14ZM4 10H12V12H4V10Z" fill="#E1007F"/></svg> },
+  { label: '결재함', iconColor: '#E1007F', iconBg: 'rgba(225,0,127,0.10)', href: '/intranet/documents', icon: <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><path d="M10 0H2C0.9 0 0.01 0.9 0.01 2L0 18C0 19.1 0.89 20 1.99 20H14C15.1 20 16 19.1 16 18V6L10 0ZM2 18V2H9V7H14V18H2ZM4 14H12V16H4V14ZM4 10H12V12H4V10Z" fill="#E1007F"/></svg> },
   { label: '오늘의 일정', iconColor: '#F97316', iconBg: '#FFEDD5', href: '/intranet/hr', icon: <svg width="18" height="20" viewBox="0 0 18 20" fill="none"><path d="M14 2H17C17.55 2 18 2.45 18 3V19C18 19.55 17.55 20 17 20H1C0.45 20 0 19.55 0 19V3C0 2.45 0.45 2 1 2H4V0H6V2H12V0H14V2ZM2 8V18H16V8H2ZM4 10H8V14H4V10Z" fill="#F97316"/></svg> },
   { label: '프로젝트', iconColor: '#6366F1', iconBg: '#EEF2FF', href: '/intranet/onboarding', icon: <svg width="20" height="18" viewBox="0 0 20 18" fill="none"><path d="M10 0L0 6L10 12L18 7.74V14H20V6L10 0ZM10 16.18L2 11.36V8.27L10 13.09L18 8.27V11.36L10 16.18Z" fill="#6366F1"/></svg> },
 ]
@@ -72,7 +72,7 @@ export default function IntranetDashboard() {
   // 오늘의 일정 수 (주간 캘린더 이벤트 기준)
   const statValues = [
     todayMails,                                    // 전자우편: 당일 수신 메일
-    pendingLeaves + pendingExpenses,               // 전자결재: 미결재 건수
+    documents.length,                                // 결재함: 문서 수
     0,                                              // 오늘의 일정: 아래서 계산
     assignments.filter(a => a.status !== 'completed').length,  // 프로젝트: 진행중 과제
   ]
