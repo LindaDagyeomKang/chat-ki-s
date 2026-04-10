@@ -35,7 +35,7 @@ export async function noticeRoutes(app: FastifyInstance) {
         content,
         category: category ?? '일반',
         authorId: sub,
-        pinned: pinned ? 'true' : 'false',
+        pinned: pinned ?? false,
       }).returning()
 
       return reply.status(201).send(result[0])
