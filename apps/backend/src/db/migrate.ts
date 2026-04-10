@@ -58,6 +58,9 @@ ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_message_id_fkey;
 -- Add role column to users (mentor/mentee)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'mentee';
 
+-- Add employee_ref_id column to users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_ref_id UUID;
+
 -- Intranet: 공지게시판
 CREATE TABLE IF NOT EXISTS notices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

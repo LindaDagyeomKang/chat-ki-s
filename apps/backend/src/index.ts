@@ -73,8 +73,6 @@ app.register(roomRoutes)
 
 const start = async () => {
   try {
-    const dbUrl = process.env.DATABASE_URL
-    console.log(`DATABASE_URL exists: ${!!dbUrl}, length: ${dbUrl?.length}, starts: ${dbUrl?.substring(0, 15)}...`)
     await runMigrations()
     const port = Number(process.env.PORT) || 4000
     await app.listen({ port, host: '0.0.0.0' })
