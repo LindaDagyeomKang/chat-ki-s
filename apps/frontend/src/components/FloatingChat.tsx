@@ -104,6 +104,37 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
     }
   }, [isOpen, pendingNotifications.length])
 
+  // 미션 시작 시 챗봇 메시지 트리거 (칸반에서 in_progress로 이동)
+  useEffect(() => {
+    function handleMissionChat() {
+      try {
+        const raw = localStorage.getItem('chat-ki-s:mission-chat')
+        if (!raw) return
+        const data = JSON.parse(raw)
+        if (Date.now() - data.timestamp > 5000) return // 5초 이내만
+
+        localStorage.removeItem('chat-ki-s:mission-chat')
+        setIsOpen(true)
+
+        const setMessages = (chat as any).setMessages
+        if (typeof setMessages === 'function') {
+          setTimeout(() => {
+            setMessages((prev: any[]) => [...prev, {
+              id: crypto.randomUUID(),
+              conversationId: '',
+              role: 'assistant' as const,
+              content: `'${data.title}' 미션을 시작하셨군요!\n\n${data.message}`,
+              createdAt: new Date(),
+            }])
+          }, 300)
+        }
+      } catch {}
+    }
+
+    window.addEventListener('storage', handleMissionChat)
+    return () => window.removeEventListener('storage', handleMissionChat)
+  }, [chat])
+
   function handleSend(content: string, mode: ChatMode) {
     rawHandleSend(content, mode)
   }

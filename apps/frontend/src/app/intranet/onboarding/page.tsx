@@ -32,32 +32,89 @@ const COLUMNS = [
   { key: 'done', label: 'Done', color: '#10B981', dot: '#10B981' },
 ]
 
+const KANBAN_STORAGE_KEY = 'chat-ki-s:kanban-status'
+
+function loadSavedStatuses(): Record<string, Mission['status']> {
+  if (typeof window === 'undefined') return {}
+  try {
+    return JSON.parse(localStorage.getItem(KANBAN_STORAGE_KEY) || '{}')
+  } catch { return {} }
+}
+
+function saveStatuses(missions: Mission[]) {
+  const map: Record<string, Mission['status']> = {}
+  missions.forEach((m) => { map[m.id] = m.status })
+  localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(map))
+}
+
 export default function OnboardingPage() {
   const { userName, userDept, userRole } = useUser()
   const [missions, setMissions] = useState<Mission[]>([])
+  const [dragId, setDragId] = useState<string | null>(null)
   const { setPageContext, clearPageContext } = usePageContext()
 
   useEffect(() => {
-    // 기본 미션 + DB 과제 병합
-    const base = DEFAULT_MISSIONS.map((m, i) => ({ ...m, id: `default-${i}` }))
+    const saved = loadSavedStatuses()
+    const base = DEFAULT_MISSIONS.map((m, i) => {
+      const id = `default-${i}`
+      return { ...m, id, status: saved[id] || m.status }
+    })
     getAssignments().then((assignments) => {
       const fromDb = assignments.map((a) => ({
         id: a.id,
         title: a.title,
         description: a.description || a.title,
-        status: (a.status === 'completed' ? 'done' : a.status === 'submitted' ? 'in_progress' : 'todo') as Mission['status'],
+        status: (saved[a.id] || (a.status === 'completed' ? 'done' : a.status === 'submitted' ? 'in_progress' : 'todo')) as Mission['status'],
         fromAssignment: true,
       }))
       setMissions([...base, ...fromDb])
     }).catch(() => setMissions(base))
   }, [])
 
+  // 미션별 챗봇 안내 메시지
+  const MISSION_CHAT_MESSAGES: Record<string, string> = {
+    '연차 신청 해보기': '연차 신청을 같이 해볼까요? "연차 신청해줘"라고 말씀해주시면 바로 도와드릴 수 있어요!',
+    '사내 메신저 설치 및 인사': '사내 메신저 설치 방법을 안내해드릴까요? 설치 후 팀 채널에서 간단한 인사를 남겨보세요!',
+    '팀원들과 점심 식사': '팀원들과의 첫 점심이군요! 사내 식당 메뉴가 궁금하시면 "식당 메뉴 알려줘"라고 물어보세요.',
+    '비즈니스 이메일 서명 설정': '이메일 서명 설정 방법을 안내해드릴게요. 인트라넷 → 전자우편 → 설정에서 서명을 등록할 수 있습니다. 표준 서명 양식이 필요하시면 말씀해주세요!',
+    '보안 서약서 작성': '보안 서약서 작성을 도와드릴게요. 인트라넷 → 인사시스템에서 보안 서약서를 확인하실 수 있습니다. 내용이 궁금하시면 물어봐주세요!',
+    '사원증 등록': '사원증 등록 방법을 안내해드릴게요. 사원증 수령 후 인트라넷 → 인사시스템에서 등록하실 수 있습니다. 분실 시 재발급 절차도 안내해드릴 수 있어요!',
+  }
+
+  function updateMissionStatus(id: string, newStatus: Mission['status']) {
+    setMissions((prev) => {
+      const updated = prev.map((m) => m.id === id ? { ...m, status: newStatus } : m)
+      saveStatuses(updated)
+
+      // in_progress로 바뀔 때 챗봇 메시지 트리거
+      if (newStatus === 'in_progress') {
+        const mission = prev.find((m) => m.id === id)
+        if (mission) {
+          const chatMsg = MISSION_CHAT_MESSAGES[mission.title] || `'${mission.title}' 미션을 시작하셨군요! 도움이 필요하시면 언제든 말씀해주세요.`
+          // FloatingChat에 전달 (storage event)
+          localStorage.setItem('chat-ki-s:mission-chat', JSON.stringify({
+            title: mission.title,
+            message: chatMsg,
+            timestamp: Date.now(),
+          }))
+          window.dispatchEvent(new Event('storage'))
+        }
+      }
+
+      return updated
+    })
+  }
+
   function toggleStatus(id: string) {
-    setMissions((prev) => prev.map((m) => {
-      if (m.id !== id) return m
-      const next = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
-      return { ...m, status: next }
-    }))
+    setMissions((prev) => {
+      const updated = prev.map((m) => {
+        if (m.id !== id) return m
+        const next = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
+        return { ...m, status: next }
+      })
+      saveStatuses(updated)
+      return updated
+    })
   }
 
   const totalMissions = missions.length
@@ -124,7 +181,18 @@ export default function OnboardingPage() {
           {COLUMNS.map((col) => {
             const colMissions = missions.filter((m) => m.status === col.key)
             return (
-              <div key={col.key} className="flex-1 flex flex-col gap-4">
+              <div
+                key={col.key}
+                className="flex-1 flex flex-col gap-4"
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = 'rgba(180,0,100,0.03)' }}
+                onDragLeave={(e) => { e.currentTarget.style.background = '' }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  e.currentTarget.style.background = ''
+                  if (dragId) updateMissionStatus(dragId, col.key as Mission['status'])
+                  setDragId(null)
+                }}
+              >
                 {/* 컬럼 헤더 */}
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
@@ -135,24 +203,27 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* 카드들 */}
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 min-h-[60px]">
                   {colMissions.map((mission) => (
                     <div
                       key={mission.id}
-                      className="p-5 bg-white flex flex-col gap-2 cursor-pointer hover:shadow-md transition-shadow"
+                      draggable
+                      onDragStart={() => setDragId(mission.id)}
+                      onDragEnd={() => setDragId(null)}
+                      className="p-5 bg-white flex flex-col gap-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
                       style={{
                         borderRadius: 32,
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                         outline: col.key === 'in_progress' ? '2px solid rgba(180,0,100,0.20)' : '1px solid rgba(0,0,0,0.03)',
                         outlineOffset: col.key === 'in_progress' ? -2 : -1,
+                        opacity: dragId === mission.id ? 0.5 : 1,
                       }}
-                      onClick={() => toggleStatus(mission.id)}
                     >
                       <div className="flex items-start gap-3">
-                        {/* 체크박스 */}
-                        <div className="pt-1">
+                        {/* 체크박스 — 클릭하면 다음 칸으로 이동 */}
+                        <div className="pt-1" onClick={(e) => { e.stopPropagation(); toggleStatus(mission.id) }}>
                           <div
-                            className="w-5 h-5 rounded-md flex items-center justify-center"
+                            className="w-5 h-5 rounded-md flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
                             style={{
                               border: col.key === 'done' ? 'none' : col.key === 'in_progress' ? '1px solid #B40064' : '1px solid #E7E8E9',
                               background: col.key === 'done' ? '#10B981' : 'white',
