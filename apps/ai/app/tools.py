@@ -355,6 +355,8 @@ SYSTEM_PROMPT = """\
 ## 도구 사용 규칙
 - 개인 데이터 질문 (내 연차, 내 메일, 내 프로필 등) → 해당 조회 도구 호출
 - 회사 규정/정책 질문 (연차 규정, 법인카드 기준 등) → search_documents 호출
+- 맛집/점심/식당/카페 추천 질문 → search_documents 호출 (여의도 맛집 데이터가 있음)
+- 회사 근처, 주변 장소 관련 질문 → search_documents 호출
 - 사람 찾기 → search_employees 호출
 - 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
 - "XX님 휴가셔?", "XX님 출근하셨나?" → check_leave_status(name="XX") 호출. 절대 추측하지 마세요!
