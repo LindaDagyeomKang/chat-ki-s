@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getNotices, getLeaves, getExpenses, getInbox, getAssignments, getCalendarEvents, createCalendarEvent, deleteCalendarEvent } from '@/lib/api'
-import type { Notice, LeaveRequest, Expense, Mail, Assignment, CalendarEvent } from '@/lib/api'
+import { getNotices, getLeaves, getExpenses, getInbox, getAssignments, getCalendarEvents, createCalendarEvent, deleteCalendarEvent, getDocuments } from '@/lib/api'
+import type { Notice, LeaveRequest, Expense, Mail, Assignment, CalendarEvent, Document } from '@/lib/api'
 import IntranetSidebar from '@/components/IntranetSidebar'
 import SpeedActions from '@/components/SpeedActions'
 import { useUser } from '@/hooks/useUser'
@@ -31,6 +31,7 @@ export default function IntranetDashboard() {
   const [mails, setMails] = useState<Mail[]>([])
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [calEvents, setCalEvents] = useState<CalendarEvent[]>([])
+  const [documents, setDocuments] = useState<Document[]>([])
   const [noticeIndex, setNoticeIndex] = useState(0)
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [newEvent, setNewEvent] = useState({ title: '', eventDate: '', startTime: '', endTime: '', location: '' })
@@ -41,6 +42,7 @@ export default function IntranetDashboard() {
     getExpenses().then(setExpenses).catch(() => {})
     getInbox().then(setMails).catch(() => {})
     getAssignments().then(setAssignments).catch(() => {})
+    getDocuments().then(setDocuments).catch(() => {})
     // 이번 주 캘린더
     const now = new Date()
     const dow = now.getDay()
@@ -205,35 +207,27 @@ export default function IntranetDashboard() {
           </div>
         </div>
 
-        {/* 결재할 문서 */}
+        {/* 결재함 */}
         <div className="bg-white" style={{ borderRadius: 32, padding: 24, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>결재할 문서</h2>
-            {(pendingLeaves + pendingExpenses) > 0 && (
-              <span className="text-[10px] font-medium" style={{ color: '#E1007F' }}>진행중 {pendingLeaves + pendingExpenses}</span>
-            )}
+            <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>결재함</h2>
+            <Link href="/intranet/documents" className="text-xs font-medium" style={{ color: '#E1007F' }}>전체보기</Link>
           </div>
           <div className="space-y-2">
-            {leaves.filter(l => l.status === 'pending').slice(0, 2).map((l) => (
-              <Link key={l.id} href="/intranet/leaves" className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-                <div>
-                  <p className="text-xs font-medium mb-1" style={{ color: '#111547' }}>연차 신청 ({l.startDate})</p>
-                  <p style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>{l.reason || '개인 사유'}</p>
-                </div>
-                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...(TAG_STYLES[l.status] || TAG_STYLES.pending), fontFamily: 'Manrope' }}>{l.status === 'approved' ? '승인 완료' : l.status === 'rejected' ? '반려' : '승인 대기'}</span>
-              </Link>
-            ))}
-            {expenses.filter(e => e.status === 'pending').slice(0, 2).map((e) => (
-              <Link key={e.id} href="/intranet/expenses" className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-                <div>
-                  <p className="text-xs font-medium mb-1" style={{ color: '#111547' }}>{e.title}</p>
-                  <p style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>{e.amount.toLocaleString()}원 · {e.expenseDate}</p>
-                </div>
-                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...(TAG_STYLES[e.status] || TAG_STYLES.pending), fontFamily: 'Manrope' }}>{e.status === 'approved' ? '승인 완료' : e.status === 'rejected' ? '반려' : '승인 대기'}</span>
-              </Link>
-            ))}
-            {(pendingLeaves + pendingExpenses) === 0 && (
-              <p className="text-center py-6" style={{ fontSize: 12, color: '#94A3B8' }}>결재할 문서가 없습니다</p>
+            {documents.length > 0 ? (
+              documents.slice(0, 4).map((d) => (
+                <Link key={d.id} href={`/intranet/documents?id=${d.id}`} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium mb-1 truncate" style={{ color: '#111547' }}>{d.title}</p>
+                    <p style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>{d.author} · {new Date(d.submittedAt).toLocaleDateString('ko-KR')}</p>
+                  </div>
+                  <span className="flex-shrink-0 ml-2 px-3 py-1 rounded-full font-black" style={{ fontSize: 9, fontFamily: 'Manrope', ...(TAG_STYLES[d.status] || { color: '#047857', bg: '#ECFDF5' }) }}>
+                    {d.status === 'approved' ? '승인' : d.status === 'rejected' ? '반려' : d.status === 'submitted' ? '제출됨' : '임시저장'}
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <p className="text-center py-6" style={{ fontSize: 12, color: '#94A3B8' }}>결재 문서가 없습니다</p>
             )}
           </div>
         </div>

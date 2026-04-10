@@ -382,3 +382,21 @@ export async function approveLeave(id: string, status: 'approved' | 'rejected'):
 export async function approveExpense(id: string, status: 'approved' | 'rejected'): Promise<Expense> {
   return apiFetch(`/api/expenses/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) })
 }
+
+// Documents (결재함)
+export interface Document {
+  id: string; userId: string; title: string; category: string; content: string
+  author: string; status: string; approverId: string | null
+  submittedAt: string; createdAt: string
+}
+
+export async function getDocuments(category?: string, keyword?: string): Promise<Document[]> {
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  if (keyword) params.set('q', keyword)
+  return apiFetch(`/api/documents?${params}`)
+}
+
+export async function getDocument(id: string): Promise<Document> {
+  return apiFetch(`/api/documents/${id}`)
+}
