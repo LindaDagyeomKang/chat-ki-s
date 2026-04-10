@@ -127,6 +127,7 @@ export const mails = pgTable('mails', {
   starred: pgBoolean('starred').notNull().default(false),
   deleted: pgBoolean('deleted').notNull().default(false),
   isDraft: pgBoolean('is_draft').notNull().default(false),
+  receivedAt: timestamp('received_at').notNull().defaultNow(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

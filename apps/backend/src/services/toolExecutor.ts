@@ -52,14 +52,14 @@ export async function executeTool(
       if (filter === 'today') {
         const todayStart = new Date()
         todayStart.setHours(0, 0, 0, 0)
-        conditions.push(gte(mails.createdAt, todayStart))
+        conditions.push(gte(mails.receivedAt, todayStart))
       } else if (filter === 'unread') {
         conditions.push(eq(mails.isRead, false))
       }
 
       const rows = await db.select().from(mails)
         .where(and(...conditions))
-        .orderBy(desc(mails.createdAt))
+        .orderBy(desc(mails.receivedAt))
         .limit(10)
 
       // 발신자/키워드 필터 (from_text에서)
@@ -76,11 +76,11 @@ export async function executeTool(
         if (filter === 'today') {
           const recent = await db.select().from(mails)
             .where(eq(mails.toId, userId))
-            .orderBy(desc(mails.createdAt))
+            .orderBy(desc(mails.receivedAt))
             .limit(5)
           if (recent.length > 0) {
             const list = recent.map((m: any, i: number) => {
-              const date = new Date(m.createdAt)
+              const date = new Date(m.receivedAt)
               const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
               const senderName = m.fromText?.match(/^([가-힣]+)/)?.[1] || '알 수 없음'
               return `${i + 1}. [${senderName}] ${m.subject} (${dateStr})`
@@ -93,7 +93,7 @@ export async function executeTool(
       }
 
       const list = filtered.map((m: any, i: number) => {
-        const date = new Date(m.createdAt)
+        const date = new Date(m.receivedAt)
         const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
         const senderName = m.fromText?.match(/^([가-힣]+)/)?.[1] || '알 수 없음'
         return `${i + 1}. [${senderName}] ${m.subject} (${dateStr})`
