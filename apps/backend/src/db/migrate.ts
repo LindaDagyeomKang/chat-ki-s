@@ -58,43 +58,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'me
 -- Add employee_ref_id column to users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_ref_id UUID;
 
--- Add missing mails columns (for existing DBs)
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS from_text TEXT DEFAULT '';
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS to_text TEXT DEFAULT '';
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS cc TEXT DEFAULT '';
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS starred BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE mails ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
-
--- Add missing employees column
-ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT '온라인';
-
--- Convert mails.is_read from varchar to boolean if needed
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'mails' AND column_name = 'is_read' AND data_type = 'character varying'
-  ) THEN
-    ALTER TABLE mails ALTER COLUMN is_read DROP DEFAULT;
-    ALTER TABLE mails ALTER COLUMN is_read TYPE BOOLEAN USING (is_read = 'true');
-    ALTER TABLE mails ALTER COLUMN is_read SET DEFAULT false;
-  END IF;
-END $$;
-
--- Convert notices.pinned from varchar to boolean if needed
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'notices' AND column_name = 'pinned' AND data_type = 'character varying'
-  ) THEN
-    ALTER TABLE notices ALTER COLUMN pinned DROP DEFAULT;
-    ALTER TABLE notices ALTER COLUMN pinned TYPE BOOLEAN USING (pinned = 'true');
-    ALTER TABLE notices ALTER COLUMN pinned SET DEFAULT false;
-  END IF;
-END $$;
-
 -- Intranet: 공지게시판
 CREATE TABLE IF NOT EXISTS notices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -285,6 +248,45 @@ CREATE TABLE IF NOT EXISTS documents (
   submitted_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ═══ ALTER statements (must come after all CREATE TABLEs) ═══
+
+-- Add missing mails columns (for existing DBs)
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS from_text TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS to_text TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS cc TEXT DEFAULT '';
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS starred BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE mails ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+
+-- Add missing employees column
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT '온라인';
+
+-- Convert mails.is_read from varchar to boolean if needed
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'mails' AND column_name = 'is_read' AND data_type = 'character varying'
+  ) THEN
+    ALTER TABLE mails ALTER COLUMN is_read DROP DEFAULT;
+    ALTER TABLE mails ALTER COLUMN is_read TYPE BOOLEAN USING (is_read = 'true');
+    ALTER TABLE mails ALTER COLUMN is_read SET DEFAULT false;
+  END IF;
+END $$;
+
+-- Convert notices.pinned from varchar to boolean if needed
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'notices' AND column_name = 'pinned' AND data_type = 'character varying'
+  ) THEN
+    ALTER TABLE notices ALTER COLUMN pinned DROP DEFAULT;
+    ALTER TABLE notices ALTER COLUMN pinned TYPE BOOLEAN USING (pinned = 'true');
+    ALTER TABLE notices ALTER COLUMN pinned SET DEFAULT false;
+  END IF;
+END $$;
 `
 
 export async function runMigrations(): Promise<void> {
