@@ -1,8 +1,8 @@
 'use client'
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  pending: { bg: '#FFFBEB', color: '#D97706', label: '결재대기' },
-  approved: { bg: '#F0FDF4', color: '#16A34A', label: '승인완료' },
+  pending: { bg: '#FFFBEB', color: '#D97706', label: '승인 대기' },
+  approved: { bg: '#F0FDF4', color: '#16A34A', label: '승인 완료' },
   rejected: { bg: '#FEF2F2', color: '#DC2626', label: '반려' },
   REVIEW: { bg: '#FFEDD5', color: '#EA580C', label: 'REVIEW' },
   URGENT: { bg: '#DBEAFE', color: '#2563EB', label: 'URGENT' },

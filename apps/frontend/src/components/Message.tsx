@@ -34,6 +34,9 @@ const SOURCE_DOC_MAP: Record<string, string> = {
 }
 
 function renderContent(text: string) {
+  // ** 마크다운 볼드 제거
+  text = text.replace(/\*\*/g, '')
+
   // /intranet/... 경로를 클릭 가능한 링크로 변환
   // 📄 출처: 문서명 — 섹션 을 클릭 가능한 다운로드 링크로 변환
   const parts = text.split(/(\/intranet\/[a-z]+(?:\/[a-z]*)?|📄 출처: .+)/g)
@@ -77,7 +80,7 @@ function renderContent(text: string) {
   })
 }
 
-export default function Message({ message, onFeedback, feedbackGiven, saved, onSave, highlighted, botName = '루키', onAgentConfirm, onAgentCancel, agentResolved }: MessageProps) {
+export default function Message({ message, onFeedback, feedbackGiven, saved, onSave, highlighted, botName = '키링', onAgentConfirm, onAgentCancel, agentResolved }: MessageProps) {
   const isUser = message.role === 'user'
   const hasSources = !isUser && message.sources && message.sources.length > 0
   const hasAgentAction = !isUser && message.agentAction && !agentResolved

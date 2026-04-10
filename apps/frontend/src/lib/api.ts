@@ -26,7 +26,7 @@ export function clearToken(): void {
 
 // Nickname management
 const NICKNAME_KEY = 'chat-ki-s:bot-nickname'
-const DEFAULT_NICKNAME = '루키'
+const DEFAULT_NICKNAME = '키링'
 
 export function getBotNickname(): string {
   if (typeof window === 'undefined') return DEFAULT_NICKNAME
@@ -329,6 +329,22 @@ export async function deleteCalendarEvent(id: string): Promise<{ success: boolea
 
 export async function updateCalendarEvent(id: string, data: Partial<{ title: string; eventDate: string; startTime: string; endTime: string; location: string }>): Promise<{ success: boolean }> {
   return apiFetch(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+// Meeting Rooms
+export interface MeetingRoom { id: string; name: string; floor: string; capacity: number; equipment: string; color: string }
+export interface RoomReservation { id: string; roomId: string; roomName: string; roomColor: string; userId: string; userName: string; title: string; reserveDate: string; startTime: string; endTime: string; attendees: string }
+
+export async function getMeetingRooms(): Promise<MeetingRoom[]> { return apiFetch('/api/rooms') }
+export async function getRoomReservations(date: string, roomId?: string): Promise<RoomReservation[]> {
+  const params = new URLSearchParams({ date }); if (roomId) params.set('roomId', roomId)
+  return apiFetch(`/api/rooms/reservations?${params}`)
+}
+export async function bookRoom(data: { roomId: string; title: string; reserveDate: string; startTime: string; endTime: string; attendees?: string }): Promise<any> {
+  return apiFetch('/api/rooms/reservations', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function cancelRoomReservation(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`/api/rooms/reservations/${id}`, { method: 'DELETE' })
 }
 
 // Notifications

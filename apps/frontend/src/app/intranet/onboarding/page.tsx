@@ -1,244 +1,193 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { getAssignments, submitAssignment } from '@/lib/api'
 import IntranetSidebar from '@/components/IntranetSidebar'
+import SpeedActions from '@/components/SpeedActions'
 import { useUser } from '@/hooks/useUser'
 import type { Assignment } from '@/lib/api'
 import { usePageContext } from '@/contexts/PageContext'
 
-const COLUMNS = [
-  { key: 'pending', label: '시작 전', color: 'border-gray-300', bg: 'bg-gray-50', badge: 'bg-gray-200 text-gray-600' },
-  { key: 'in_progress', label: '진행 중', color: 'border-blue-300', bg: 'bg-blue-50', badge: 'bg-blue-100 text-blue-700' },
-  { key: 'submitted', label: '제출 완료', color: 'border-yellow-300', bg: 'bg-yellow-50', badge: 'bg-yellow-100 text-yellow-700' },
-  { key: 'completed', label: '완료', color: 'border-green-300', bg: 'bg-green-50', badge: 'bg-green-100 text-green-700' },
+interface Mission {
+  id: string
+  title: string
+  description: string
+  status: 'todo' | 'in_progress' | 'done'
+  fromAssignment?: boolean
+}
+
+// 기본 온보딩 미션 (사수가 설정하는 구조)
+const DEFAULT_MISSIONS: Omit<Mission, 'id'>[] = [
+  { title: '연차 신청 해보기', description: '"직접 연차 신청을 한번 해보세요. 시스템을 직접 써보는 것이 자율성을 향한 첫 번째 단계입니다!"', status: 'todo' },
+  { title: '사내 메신저 설치 및 인사', description: '"동료들과 소통하는 가장 빠른 방법입니다. 가벼운 인사와 함께 팀 채널에 합류해 보세요."', status: 'todo' },
+  { title: '팀원들과 점심 식사', description: '"업무 외적인 대화를 통해 서로를 더 잘 알아가는 시간을 가져보시길 권장합니다."', status: 'todo' },
+  { title: '비즈니스 이메일 서명 설정', description: '"우리 기업의 아이덴티티를 나타내는 표준 서명을 설정하여 전문성을 갖춰 보세요."', status: 'todo' },
+  { title: '보안 서약서 작성', description: '"중요한 정보 자산을 보호하는 것은 금융인의 기본입니다. 내용을 꼼꼼히 확인하고 서명해 주세요."', status: 'in_progress' },
+  { title: '사원증 등록', description: '"사원증은 Kiwoom 가족의 증표입니다. 무사히 수령하고 등록해주셔서 감사합니다!"', status: 'done' },
 ]
 
-// pending을 시작 전으로, 별도 in_progress 상태 추가를 위해 로컬에서 관리
-const PROGRESS_KEY = 'chat-ki-s:assignment-progress'
-
-function loadProgress(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch { return {} }
-}
-
-function saveProgress(data: Record<string, string>) {
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(data))
-}
+const COLUMNS = [
+  { key: 'todo', label: 'To Do', color: '#B40064', dot: '#B40064' },
+  { key: 'in_progress', label: 'In Progress', color: '#FBBF24', dot: '#FBBF24' },
+  { key: 'done', label: 'Done', color: '#10B981', dot: '#10B981' },
+]
 
 export default function OnboardingPage() {
   const { userName, userDept, userRole } = useUser()
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [progress, setProgress] = useState<Record<string, string>>({})
-  const [selected, setSelected] = useState<Assignment | null>(null)
-  const [submissionText, setSubmissionText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [missions, setMissions] = useState<Mission[]>([])
   const { setPageContext, clearPageContext } = usePageContext()
 
   useEffect(() => {
-    setProgress(loadProgress())
-    getAssignments().then(setAssignments).catch(() => {})
+    // 기본 미션 + DB 과제 병합
+    const base = DEFAULT_MISSIONS.map((m, i) => ({ ...m, id: `default-${i}` }))
+    getAssignments().then((assignments) => {
+      const fromDb = assignments.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description || a.title,
+        status: (a.status === 'completed' ? 'done' : a.status === 'submitted' ? 'in_progress' : 'todo') as Mission['status'],
+        fromAssignment: true,
+      }))
+      setMissions([...base, ...fromDb])
+    }).catch(() => setMissions(base))
   }, [])
 
-  useEffect(() => {
-    if (selected) {
-      setPageContext({
-        type: 'assignment',
-        title: selected.title,
-        content: selected.description || selected.title,
-        metadata: `상태: ${selected.status}\n마감: ${selected.dueDate || '없음'}`,
-      })
-    } else {
-      clearPageContext()
-    }
-  }, [selected])
-
-  function getStatus(a: Assignment): string {
-    if (a.status === 'completed') return 'completed'
-    if (a.status === 'submitted') return 'submitted'
-    return progress[a.id] || 'pending'
+  function toggleStatus(id: string) {
+    setMissions((prev) => prev.map((m) => {
+      if (m.id !== id) return m
+      const next = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
+      return { ...m, status: next }
+    }))
   }
 
-  function startAssignment(id: string) {
-    setProgress((prev) => {
-      const next = { ...prev, [id]: 'in_progress' }
-      saveProgress(next)
-      return next
-    })
-  }
-
-  function getColumnAssignments(columnKey: string) {
-    return assignments.filter((a) => getStatus(a) === columnKey)
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!selected || !submissionText.trim()) return
-    setSubmitting(true)
-    try {
-      const updated = await submitAssignment(selected.id, submissionText.trim())
-      setAssignments((prev) => prev.map((a) => a.id === updated.id ? updated : a))
-      setSelected(null)
-      setSubmissionText('')
-    } catch {} finally {
-      setSubmitting(false)
-    }
-  }
-
-  const total = assignments.length
-  const done = assignments.filter((a) => a.status === 'completed').length
-  const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0
-
-  // 과제 상세/제출 모달
-  if (selected) {
-    const status = getStatus(selected)
-    return (
-    <div className="flex flex-1 min-h-0">
-    <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole} />
-    <main className="flex-1 overflow-y-auto">
-    <div className="p-6 max-w-3xl mx-auto">
-        <button onClick={() => setSelected(null)} className="text-sm text-blue-600 hover:underline mb-4 flex items-center gap-1">
-          <span>←</span> 온보딩 보드
-        </button>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center gap-2 mb-3">
-            {COLUMNS.map((c) => c.key === status ? (
-              <span key={c.key} className={`text-xs px-2 py-0.5 rounded-full ${c.badge}`}>{c.label}</span>
-            ) : null)}
-            {selected.dueDate && <span className="text-xs text-gray-400">마감: {selected.dueDate}</span>}
-          </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">{selected.title}</h1>
-          {selected.description && <p className="text-sm text-gray-600 mb-4 whitespace-pre-wrap">{selected.description}</p>}
-
-          {selected.submission && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-xs font-medium text-blue-700 mb-1">내 제출</p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{selected.submission}</p>
-            </div>
-          )}
-
-          {selected.feedback && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <p className="text-xs font-medium text-green-700 mb-1">사수 피드백</p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{selected.feedback}</p>
-            </div>
-          )}
-
-          {/* 시작 전 → 진행 시작 */}
-          {status === 'pending' && (
-            <button
-              onClick={() => { startAssignment(selected.id); setSelected(null) }}
-              className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              과제 시작하기
-            </button>
-          )}
-
-          {/* 진행 중 → 제출 */}
-          {status === 'in_progress' && (
-            <form onSubmit={handleSubmit} className="mt-4 border-t border-gray-100 pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">과제 제출</label>
-              <textarea
-                value={submissionText}
-                onChange={(e) => setSubmissionText(e.target.value)}
-                placeholder="과제 답변을 작성해 주세요"
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-              <button
-                type="submit"
-                disabled={submitting || !submissionText.trim()}
-                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                {submitting ? '제출 중...' : '제출하기'}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </main>
-    </div>
-    )
-  }
+  const totalMissions = missions.length
+  const doneMissions = missions.filter((m) => m.status === 'done').length
+  const progressPercent = totalMissions > 0 ? Math.round((doneMissions / totalMissions) * 100) : 0
+  const circumference = 2 * Math.PI * 48
 
   return (
     <div className="flex flex-1 min-h-0">
-    <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole} />
-    <main className="flex-1 overflow-y-auto">
-    <div className="p-6 h-full flex flex-col">
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">온보딩 프로세스</h1>
-          <p className="text-sm text-gray-500 mt-1">모의 업무 과제를 진행하세요</p>
-        </div>
-        {total > 0 && (
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-bold text-blue-600">{done}/{total} 완료</p>
-              <p className="text-xs text-gray-400">{progressPercent}%</p>
+      <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole}>
+        {/* 미션 진행도 */}
+        <div className="px-6 py-8" style={{ borderBottom: '1px solid #F8FAFC' }}>
+          <p style={{ color: '#111547', fontSize: 14, fontWeight: 700, marginBottom: 16 }}>미션 진행도</p>
+          <div className="bg-white p-4 flex flex-col items-center" style={{ borderRadius: 32, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div className="relative" style={{ width: 128, height: 128 }}>
+              <svg width="128" height="128" viewBox="0 0 128 128" className="-rotate-90">
+                <circle cx="64" cy="64" r="48" stroke="#E1E3E4" strokeWidth="8" fill="none" />
+                <circle cx="64" cy="64" r="48" stroke="#E1007F" strokeWidth="8" fill="none"
+                  strokeDasharray={`${circumference}`}
+                  strokeDashoffset={`${circumference * (1 - progressPercent / 100)}`}
+                  strokeLinecap="round" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span style={{ color: '#111547', fontSize: 24, fontWeight: 800 }}>{progressPercent}%</span>
+              </div>
             </div>
-            <div className="w-24 bg-gray-100 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+            <div className="mt-3 text-center">
+              <p style={{ color: 'rgba(71,85,105,0.70)', fontSize: 14 }}>{totalMissions}개 중</p>
+              <p style={{ color: '#475569', fontSize: 20, fontWeight: 500 }}>{doneMissions}개 완료</p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {total === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <span className="text-5xl mb-4 block">📋</span>
-            <p className="text-gray-500 font-medium">아직 배정된 과제가 없습니다</p>
-            <p className="text-xs text-gray-400 mt-1">사수가 챗봇으로 과제를 등록하면 여기에 표시됩니다</p>
+        <SpeedActions actions={[
+          { label: '메일쓰기', href: '/intranet/mails', iconSvg: <svg width="16" height="13" viewBox="0 0 20 16" fill="none"><path d="M18 0H2C.9 0 .01.9.01 2L0 14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V2l8 5 8-5v2z" fill="#E1007F"/></svg> },
+          { label: '기안하기', href: '/intranet/expenses', iconSvg: <svg width="14" height="16" viewBox="0 0 16 20" fill="none"><path d="M10 0H2C.9 0 .01.9.01 2L0 18c0 1.1.89 2 1.99 2H14c1.1 0 2-.9 2-2V6l-6-6zM2 18V2h7v5h5v11H2zm2-4h8v2H4v-2zm0-4h8v2H4v-2z" fill="#6366F1"/></svg> },
+          { label: '자원예약', href: '/intranet/rooms', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7 0h6v2H7V0zM9 12h2V7H9v5zm1-12C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#10B981"/></svg> },
+          { label: '주소록', href: '/intranet/addressbook', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15 8a3 3 0 100-6 3 3 0 000 6zm-8 0a3 3 0 100-6 3 3 0 000 6zm0 2c-2.33 0-7 1.17-7 3.5V16h14v-2.5C14 11.17 9.33 10 7 10zm8 0c-.29 0-.62.02-.97.05A4.22 4.22 0 0118 13.5V16h2v-2.5C20 11.17 17.33 10 15 10z" fill="#F97316"/></svg> },
+          { label: '일정관리', href: '/intranet/calendar', iconSvg: <svg width="16" height="16" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#3B82F6"/></svg> },
+          { label: '더보기', href: '/intranet', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="4" r="2" fill="#94A3B8"/><circle cx="10" cy="4" r="2" fill="#94A3B8"/><circle cx="16" cy="4" r="2" fill="#94A3B8"/><circle cx="4" cy="10" r="2" fill="#94A3B8"/><circle cx="10" cy="10" r="2" fill="#94A3B8"/><circle cx="16" cy="10" r="2" fill="#94A3B8"/></svg> },
+        ]} />
+      </IntranetSidebar>
+
+      <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-6">
+        {/* 헤더 */}
+        <div>
+          <h1 style={{ color: '#111547', fontSize: 30, fontWeight: 500 }}>챗키스: 챗봇과 함께 하는 키움 라이프 스터디</h1>
+          <p style={{ color: 'rgba(17,21,71,0.50)', fontSize: 14, fontWeight: 500 }}>키움증권의 새로운 가족이 되신 것을 환영합니다. 멘토들의 조언을 수행해나가면서 함께 성장해나가요!</p>
+        </div>
+
+        {/* Tip 카드 */}
+        <div className="flex items-center gap-4 px-6 py-4" style={{ background: 'rgba(255,217,227,0.30)', borderRadius: 32, outline: '1px solid rgba(180,0,100,0.10)' }}>
+          <img src="/images/image 4.png" alt="" className="w-12 h-12 flex-shrink-0" />
+          <div className="flex-1">
+            <span style={{ color: '#B40064', fontSize: 12, fontFamily: 'Manrope', fontWeight: 700 }}>Tip for you! </span>
+            <span style={{ color: '#475569', fontSize: 12 }}>
+              멘토의 한마디는 신규 입사자분들의 빠른 적응을 위해 멘토들이 직접 남긴 코멘트로 설계되었습니다. 궁금한 점은 언제든 멘토나 AI 챗봇 키링에게 물어보세요!
+            </span>
           </div>
         </div>
-      ) : (
-        <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
+
+        {/* 칸반 보드 */}
+        <div className="flex gap-6 flex-1 min-h-0">
           {COLUMNS.map((col) => {
-            const items = getColumnAssignments(col.key)
+            const colMissions = missions.filter((m) => m.status === col.key)
             return (
-              <div key={col.key} className="flex flex-col min-h-0">
-                {/* 열 헤더 */}
-                <div className={`flex items-center gap-2 mb-3 px-1`}>
-                  <h3 className="text-sm font-semibold text-gray-700">{col.label}</h3>
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${col.badge}`}>{items.length}</span>
+              <div key={col.key} className="flex-1 flex flex-col gap-4">
+                {/* 컬럼 헤더 */}
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ background: col.dot }} />
+                    <span style={{ color: '#111547', fontSize: 16, fontFamily: 'Manrope', fontWeight: 700 }}>{col.label}</span>
+                    <span style={{ color: '#46464F', fontSize: 16, fontFamily: 'Manrope', fontWeight: 400, paddingLeft: 4 }}>{colMissions.length}</span>
+                  </div>
                 </div>
 
-                {/* 카드 목록 */}
-                <div className={`flex-1 rounded-xl ${col.bg} border ${col.color} p-2 space-y-2 overflow-y-auto`}>
-                  {items.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-8">없음</p>
-                  )}
-                  {items.map((a) => (
-                    <button
-                      key={a.id}
-                      onClick={() => setSelected(a)}
-                      className="w-full text-left bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md hover:border-blue-300 transition-all"
+                {/* 카드들 */}
+                <div className="flex flex-col gap-3">
+                  {colMissions.map((mission) => (
+                    <div
+                      key={mission.id}
+                      className="p-5 bg-white flex flex-col gap-2 cursor-pointer hover:shadow-md transition-shadow"
+                      style={{
+                        borderRadius: 32,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        outline: col.key === 'in_progress' ? '2px solid rgba(180,0,100,0.20)' : '1px solid rgba(0,0,0,0.03)',
+                        outlineOffset: col.key === 'in_progress' ? -2 : -1,
+                      }}
+                      onClick={() => toggleStatus(mission.id)}
                     >
-                      <p className="text-sm font-medium text-gray-900 mb-1">{a.title}</p>
-                      {a.description && (
-                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">{a.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        {a.dueDate ? (
-                          <span className="text-[11px] text-gray-400">~{a.dueDate}</span>
-                        ) : (
-                          <span />
-                        )}
-                        {a.feedback && <span className="text-[11px] text-green-600">💬 피드백</span>}
+                      <div className="flex items-start gap-3">
+                        {/* 체크박스 */}
+                        <div className="pt-1">
+                          <div
+                            className="w-5 h-5 rounded-md flex items-center justify-center"
+                            style={{
+                              border: col.key === 'done' ? 'none' : col.key === 'in_progress' ? '1px solid #B40064' : '1px solid #E7E8E9',
+                              background: col.key === 'done' ? '#10B981' : 'white',
+                            }}
+                          >
+                            {col.key === 'done' && (
+                              <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <p style={{
+                            color: '#111547',
+                            fontSize: 16,
+                            fontWeight: 500,
+                            textDecoration: col.key === 'done' ? 'line-through' : 'none',
+                          }}>{mission.title}</p>
+                          <p style={{
+                            color: col.key === 'done' ? 'rgba(70,70,79,0.60)' : '#46464F',
+                            fontSize: 12,
+                            fontWeight: col.key === 'done' ? 100 : 500,
+                            lineHeight: '19.5px',
+                            marginTop: 8,
+                          }}>{mission.description}</p>
+                        </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
             )
           })}
         </div>
-      )}
-    </div>
-    </main>
+
+      </main>
     </div>
   )
 }

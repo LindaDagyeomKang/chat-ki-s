@@ -138,12 +138,12 @@ export default function NoticesPage() {
           {/* 피처드 카드 (좌측, 네이비) */}
           <div className="flex-1 p-8 flex flex-col justify-between relative overflow-hidden" style={{ borderRadius: 32, background: 'linear-gradient(169deg, #111547 0%, #1A237E 100%)', minHeight: 260 }}>
             <div>
-              <span className="inline-block text-[10px] font-medium px-3 py-1 rounded-full mb-4" style={{ background: '#E1007F', color: '#FFF' }}>공지사항</span>
-              <h2 className="text-xl font-medium text-white mb-2 leading-snug" style={{ maxWidth: '60%' }}>2026년 신입사원 온보딩 AI 챗봇 Chat-Ki-S</h2>
-              <p className="text-xs text-white/60 mb-6">임직원 여러분의 많은 관심과 적극적인 사용 부탁드립니다.</p>
+              <span className="inline-block text-[10px] font-medium px-3 py-1 rounded-full mb-4" style={{ background: '#E1007F', color: '#FFF' }}>게시판 안내</span>
+              <h2 className="text-xl font-medium text-white mb-2 leading-snug" style={{ maxWidth: '60%' }}>궁금한 점이 있다면? AI 챗봇 키링에게 물어보세요</h2>
+              <p className="text-xs text-white/60 mb-6">게시판 공지사항을 보면서 키링에게 내용을 요약하거나 관련 규정을 물어볼 수 있어요.</p>
             </div>
             <a href="/chat" className="inline-flex items-center px-6 py-2 rounded-full" style={{ background: '#FFF', color: '#111547', fontSize: 12, fontWeight: 500, width: 'fit-content' }}>
-              자세히 보기
+              키링에게 물어보기
             </a>
             {/* 챗봇 로고 (오른쪽) */}
             <img src="/images/image 4.png" alt="Chat-Ki-S" className="absolute right-16 top-1/2 -translate-y-1/2" style={{ width: 160 }} />

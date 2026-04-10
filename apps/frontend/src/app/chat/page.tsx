@@ -29,7 +29,7 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'conversations' | 'saved'>('conversations')
   const [highlightedId, setHighlightedId] = useState<string | undefined>()
-  const [botName, setBotName] = useState('루키')
+  const [botName, setBotName] = useState('키링')
   const [editingName, setEditingName] = useState(false)
   const [editNameValue, setEditNameValue] = useState('')
 
@@ -65,7 +65,7 @@ export default function ChatPage() {
   }
 
   function handleNameSave() {
-    const name = editNameValue.trim() || '루키'
+    const name = editNameValue.trim() || '키링'
     setBotNickname(name)
     setBotName(name)
     setEditingName(false)

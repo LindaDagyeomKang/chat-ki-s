@@ -158,7 +158,7 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
           <img src="/icons/Icon-9.svg" alt="" width={15} height={15} />
           환경설정
         </button>
-        <button onClick={() => { localStorage.removeItem('accessToken'); router.replace('/login') }} className="flex items-center gap-3 py-2 text-xs" style={{ color: '#BA1A1A' }}>
+        <button onClick={() => { localStorage.removeItem('accessToken'); localStorage.removeItem('chat-ki-s:bot-nickname'); router.replace('/login') }} className="flex items-center gap-3 py-2 text-xs" style={{ color: '#BA1A1A' }}>
           <img src="/icons/Icon-8.svg" alt="" width={14} height={14} />
           로그아웃
         </button>

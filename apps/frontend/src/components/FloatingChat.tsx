@@ -18,7 +18,7 @@ interface FloatingChatProps {
   pageContext?: PageContextData
 }
 
-export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '루키', defaultOpen = true, pageContext }: FloatingChatProps) {
+export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '키링', defaultOpen = true, pageContext }: FloatingChatProps) {
   const { messages, sending, handleSend: rawHandleSend, handleFeedback, feedbackMap, savedMessages, handleSave } = chat
   const loadConversation = (chat as any).loadConversation as ((id: string) => Promise<void>) | undefined
 
@@ -36,8 +36,11 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const [size, setSize] = useState({ w: 320, h: 484 })
+  const [pos, setPos] = useState({ x: -1, y: -1 }) // -1 = 기본 위치 (right:24, bottom:24)
   const resizing = useRef(false)
+  const dragging = useRef(false)
   const startPos = useRef({ x: 0, y: 0, w: 0, h: 0 })
+  const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 })
   const [unreadCount, setUnreadCount] = useState(0)
   const [pendingNotifications, setPendingNotifications] = useState<any[]>([])
 
@@ -151,9 +154,16 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
       if (!resizing.current) return
       const dw = startPos.current.x - ev.clientX
       const dh = startPos.current.y - ev.clientY
-      setSize({
-        w: Math.max(300, Math.min(600, startPos.current.w + dw)),
-        h: Math.max(400, Math.min(window.innerHeight - 48, startPos.current.h + dh)),
+      const newW = Math.max(300, Math.min(600, startPos.current.w + dw))
+      const newH = Math.max(400, Math.min(window.innerHeight - 48, startPos.current.h + dh))
+      setSize({ w: newW, h: newH })
+      // 위치도 화면 안으로 보정
+      setPos((prev) => {
+        if (prev.x === -1) return prev
+        return {
+          x: Math.max(0, Math.min(window.innerWidth - newW, prev.x)),
+          y: Math.max(0, Math.min(window.innerHeight - newH, prev.y)),
+        }
       })
     }
     function onUp() {
@@ -165,16 +175,50 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
     window.addEventListener('mouseup', onUp)
   }
 
+  function handleDragStart(e: React.MouseEvent) {
+    // 버튼 클릭은 드래그 제외
+    if ((e.target as HTMLElement).closest('button')) return
+    e.preventDefault()
+    dragging.current = true
+    const curX = pos.x === -1 ? window.innerWidth - size.w - 24 : pos.x
+    const curY = pos.y === -1 ? window.innerHeight - size.h - 24 : pos.y
+    dragStart.current = { mx: e.clientX, my: e.clientY, px: curX, py: curY }
+
+    function onMove(ev: MouseEvent) {
+      if (!dragging.current) return
+      const dx = ev.clientX - dragStart.current.mx
+      const dy = ev.clientY - dragStart.current.my
+      const newX = Math.max(0, Math.min(window.innerWidth - size.w, dragStart.current.px + dx))
+      const newY = Math.max(0, Math.min(window.innerHeight - size.h, dragStart.current.py + dy))
+      setPos({ x: newX, y: newY })
+    }
+    function onUp() {
+      dragging.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  const posStyle = pos.x === -1
+    ? { bottom: 24, right: 24 }
+    : { top: pos.y, left: pos.x }
+
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col z-50 overflow-hidden" style={{ width: size.w, height: size.h, borderRadius: 32, border: '1px solid #F1F5F9', background: '#FFF', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+    <div className="fixed flex flex-col z-50 overflow-hidden" style={{ ...posStyle, width: size.w, height: size.h, borderRadius: 32, border: '1px solid #F1F5F9', background: '#FFF', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
       {/* 리사이즈 핸들 (좌상단 모서리) */}
       <div
         onMouseDown={handleResizeStart}
         className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-10"
         style={{ borderTopLeftRadius: 32 }}
       />
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: '#111547' }}>
+      {/* Header (드래그 가능) */}
+      <div
+        onMouseDown={handleDragStart}
+        className="flex items-center justify-between px-4 py-3 flex-shrink-0 cursor-move select-none"
+        style={{ background: '#111547' }}
+      >
         <div className="flex flex-col">
           <span className="text-white font-medium text-sm" style={{ fontFamily: 'Pretendard' }}>{botName}</span>
           <div className="flex items-center gap-1.5">
@@ -261,8 +305,8 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
             ))}
             {sending && (
               <div className="flex justify-start mb-3">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[8px] font-bold mr-2 flex-shrink-0 mt-1" style={{ background: '#111547' }}>
-                  {botName.slice(0, 2)}
+                <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 mt-1" style={{ background: '#111547' }}>
+                  <img src="/images/image 4.png" alt="" className="w-4 h-4" />
                 </div>
                 <div className="px-3 py-2 flex items-center gap-2" style={{ borderRadius: '0 16px 16px 16px', background: '#FFF', border: '1px solid #F1F5F9' }}>
                   <span className="flex gap-1">

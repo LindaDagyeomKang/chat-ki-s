@@ -201,6 +201,31 @@ export const calendarEvents = pgTable('calendar_events', {
   endTime: varchar('end_time', { length: 10 }).default(''),
   location: varchar('location', { length: 100 }).default(''),
   color: varchar('color', { length: 20 }).default('#3B82F6'),
+  isCompany: pgBoolean('is_company').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ──────────────────────────────────────
+// 회의실 예약
+// ──────────────────────────────────────
+export const meetingRooms = pgTable('meeting_rooms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  floor: varchar('floor', { length: 10 }).default(''),
+  capacity: integer('capacity').default(0),
+  equipment: text('equipment').default(''),
+  color: varchar('color', { length: 20 }).default('#3B82F6'),
+})
+
+export const roomReservations = pgTable('room_reservations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  roomId: uuid('room_id').notNull().references(() => meetingRooms.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  reserveDate: date('reserve_date').notNull(),
+  startTime: varchar('start_time', { length: 10 }).notNull(),
+  endTime: varchar('end_time', { length: 10 }).notNull(),
+  attendees: text('attendees').default(''),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

@@ -60,11 +60,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_schedule",
-            "description": "특정 날짜의 일정(회의, 미팅 등)을 조회합니다. date를 지정하지 않으면 오늘 일정을 조회합니다.",
+            "description": "일정을 조회합니다. 특정 날짜, 이번 달, 전사 일정 등을 조회할 수 있습니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "date": {"type": "string", "description": "조회할 날짜 (YYYY-MM-DD). 없으면 오늘"},
+                    "month": {"type": "string", "description": "월간 조회 (YYYY-MM). date보다 우선"},
+                    "companyOnly": {"type": "boolean", "description": "전사 일정만 조회할 때 true"},
                 },
                 "required": [],
             },
@@ -74,7 +76,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_notices",
-            "description": "최근 공지사항 목록을 조회합니다.",
+            "description": "사내 공지사항 목록을 조회합니다. 공지사항만 조회 가능하며, 보도자료/뉴스/IR 자료는 조회할 수 없습니다.",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
@@ -90,7 +92,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_employees",
-            "description": "임직원을 검색합니다. 이름, 부서, 팀, 담당업무, 전화번호로 검색할 수 있습니다.",
+            "description": "임직원을 검색합니다. 이름, 부서, 팀, 담당업무, 전화번호, 직급으로 검색할 수 있습니다. '사장님 누구야?', '부장급 누구 있어?' 같은 직급 검색도 가능합니다. count=true로 전체 직원 수도 조회 가능합니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -98,8 +100,24 @@ TOOLS = [
                     "department": {"type": "string", "description": "부서/팀명"},
                     "topic": {"type": "string", "description": "담당 업무 키워드"},
                     "phone": {"type": "string", "description": "전화번호/내선번호"},
+                    "rank": {"type": "string", "description": "직급 (사장, 부사장, 전무, 상무, 이사, 부장, 차장, 과장, 대리, 주임, 사원)"},
+                    "count": {"type": "boolean", "description": "전체 직원 수만 조회할 때 true"},
                 },
                 "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_leave_status",
+            "description": "특정 직원이 오늘 휴가/연차 중인지 확인합니다. 'XX님 오늘 휴가셔?', 'XX님 출근하셨나?' 등의 질문에 사용합니다. 반드시 이 도구로 실제 휴가 여부를 확인한 후 답변하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "확인할 직원 이름"},
+                },
+                "required": ["name"],
             },
         },
     },
@@ -225,6 +243,58 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "check_room_availability",
+            "description": "회의실 예약 가능 여부를 확인합니다. '회의실 비어있어?', '내일 대회의실 예약 가능해?' 등의 질문에 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {"type": "string", "description": "확인할 날짜 (YYYY-MM-DD)"},
+                    "roomName": {"type": "string", "description": "회의실 이름 (선택, 없으면 전체)"},
+                },
+                "required": ["date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "book_room",
+            "description": "회의실을 예약합니다. '대회의실 A 내일 오후 2시에 예약해줘' 등의 요청에 사용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "roomName": {"type": "string", "description": "회의실 이름 (대회의실 A, 소회의실 1 등)"},
+                    "date": {"type": "string", "description": "예약 날짜 (YYYY-MM-DD)"},
+                    "startTime": {"type": "string", "description": "시작 시간 (HH:MM)"},
+                    "endTime": {"type": "string", "description": "종료 시간 (HH:MM)"},
+                    "title": {"type": "string", "description": "회의 제목"},
+                    "attendees": {"type": "string", "description": "참석자 (선택)"},
+                },
+                "required": ["roomName", "date", "startTime", "endTime", "title"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "draft_email",
+            "description": "비즈니스 메일 초안을 작성합니다. '메일 작성해줘', '메일 초안 좀 써줘', '이메일 보내려는데 도와줘' 등의 요청에 사용합니다. 수신자, 용건, 데이터 등 정보가 부족하면 먼저 질문하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient": {"type": "string", "description": "수신자 (이름, 직책, 부서)"},
+                    "cc": {"type": "string", "description": "참조자 (선택)"},
+                    "subject": {"type": "string", "description": "메일 용건/주제"},
+                    "details": {"type": "string", "description": "포함할 핵심 내용, 데이터, 날짜, 수치 등"},
+                    "senderDept": {"type": "string", "description": "발신 부서 (유저 프로필에서 추출)"},
+                },
+                "required": ["subject", "details"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_glossary",
             "description": "금융 용어를 검색하여 설명합니다. 정확한 용어명 또는 개념 설명으로 검색할 수 있습니다. 증권, 금융, 투자 관련 용어 질문에 사용합니다.",
             "parameters": {
@@ -265,12 +335,15 @@ SYSTEM_PROMPT = """\
 - 회사 규정/정책 질문 (연차 규정, 법인카드 기준 등) → search_documents 호출
 - 사람 찾기 → search_employees 호출
 - 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
+- "XX님 휴가셔?", "XX님 출근하셨나?" → check_leave_status(name="XX") 호출. 절대 추측하지 마세요!
 - "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
   ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
+- 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)
 - 금융 용어/개념 질문 → search_glossary 호출
 - 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)
 - ⚠️ "캘린더에 추가해줘", "일정 등록해줘" = add_calendar_event (submit_leave 아님)
 - 설문조사 → start_survey로 시작, 질문 하나씩 진행, submit_survey_answer로 답변 수집
+- 보도자료/뉴스/IR 질문 → 도구 호출하지 말고 "보도자료는 현재 시스템에서 제공하지 않습니다. 키움증권 홈페이지를 확인해 주세요." 안내
 - 잡담/인사 → 도구 없이 직접 답변
 
 ## 설문 진행 규칙

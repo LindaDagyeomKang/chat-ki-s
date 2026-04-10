@@ -13,8 +13,7 @@ const TOP_NAV = [
   { href: '/intranet/mails', label: '전자우편' },
   { href: '/intranet/notices', label: '게시판' },
   { href: '/intranet/hr', label: '인사시스템' },
-  { href: '/intranet/onboarding', label: '온보딩' },
-  { href: '/intranet/addressbook', label: '주소록' },
+  { href: '/intranet/onboarding', label: '챗키스' },
 ]
 
 const TOP_NAV_MENTOR = [
@@ -27,7 +26,7 @@ function IntranetLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [ready, setReady] = useState(false)
-  const [botName, setBotName] = useState('루키')
+  const [botName, setBotName] = useState('키링')
   const [userRole, setUserRole] = useState('mentee')
   const chat = useChat()
 

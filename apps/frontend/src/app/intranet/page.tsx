@@ -16,7 +16,9 @@ const STAT_CARDS = [
 ]
 
 const TAG_STYLES: Record<string, { color: string; bg: string }> = {
-  REVIEW: { color: '#EA580C', bg: '#FFEDD5' },
+  pending: { color: '#EA580C', bg: '#FFEDD5' },
+  approved: { color: '#047857', bg: '#ECFDF5' },
+  rejected: { color: '#DC2626', bg: '#FEF2F2' },
   URGENT: { color: '#2563EB', bg: '#DBEAFE' },
   NORMAL: { color: '#46464F', bg: '#F1F5F9' },
 }
@@ -103,37 +105,33 @@ export default function IntranetDashboard() {
       <SpeedActions actions={[
         { label: '메일쓰기', href: '/intranet/mails', iconSvg: <svg width="16" height="13" viewBox="0 0 20 16" fill="none"><path d="M18 0H2C.9 0 .01.9.01 2L0 14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V2l8 5 8-5v2z" fill="#E1007F"/></svg> },
         { label: '기안하기', href: '/intranet/expenses', iconSvg: <svg width="14" height="16" viewBox="0 0 16 20" fill="none"><path d="M10 0H2C.9 0 .01.9.01 2L0 18c0 1.1.89 2 1.99 2H14c1.1 0 2-.9 2-2V6l-6-6zM2 18V2h7v5h5v11H2zm2-4h8v2H4v-2zm0-4h8v2H4v-2z" fill="#6366F1"/></svg> },
-        { label: '일정작성', href: '/intranet/leaves', iconSvg: <svg width="16" height="16" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#F97316"/></svg> },
-        { label: '글쓰기', href: '/intranet/notices', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2.5 17.5h1.07l10.17-10.17-1.07-1.07L2.5 16.43V17.5zM17.81 6.36l-4.17-4.17 1.42-1.42a1.51 1.51 0 012.12 0l2.05 2.05a1.51 1.51 0 010 2.12l-1.42 1.42zM0 20v-4.24L14.37 1.39l4.24 4.24L4.24 20H0z" fill="#3B82F6"/></svg> },
-        { label: '자원예약', href: '/intranet', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7 0h6v2H7V0zM9 12h2V7H9v5zm1-12C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#10B981"/></svg> },
+        { label: '자원예약', href: '/intranet/rooms', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7 0h6v2H7V0zM9 12h2V7H9v5zm1-12C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#10B981"/></svg> },
+        { label: '주소록', href: '/intranet/addressbook', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15 8a3 3 0 100-6 3 3 0 000 6zm-8 0a3 3 0 100-6 3 3 0 000 6zm0 2c-2.33 0-7 1.17-7 3.5V16h14v-2.5C14 11.17 9.33 10 7 10zm8 0c-.29 0-.62.02-.97.05A4.22 4.22 0 0118 13.5V16h2v-2.5C20 11.17 17.33 10 15 10z" fill="#F97316"/></svg> },
+        { label: '일정관리', href: '/intranet/calendar', iconSvg: <svg width="16" height="16" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#3B82F6"/></svg> },
         { label: '더보기', href: '/intranet', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="4" r="2" fill="#94A3B8"/><circle cx="10" cy="4" r="2" fill="#94A3B8"/><circle cx="16" cy="4" r="2" fill="#94A3B8"/><circle cx="4" cy="10" r="2" fill="#94A3B8"/><circle cx="10" cy="10" r="2" fill="#94A3B8"/><circle cx="16" cy="10" r="2" fill="#94A3B8"/></svg> },
       ]} />
     </IntranetSidebar>
     <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
-      {/* 상단 Stat Cards + 챗봇 카드 */}
-      <div className="grid grid-cols-5 gap-5">
-        {STAT_CARDS.map((card, i) => (
-          <Link key={card.label} href={card.href} className="bg-white p-5 flex flex-col items-center hover:shadow-md transition-shadow" style={{ borderRadius: 32, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-            <div className="p-3 rounded-xl mb-3" style={{ background: card.iconBg }}>
-              {card.icon}
-            </div>
-            <p className="text-[10px] mb-2" style={{ color: '#46464F', fontWeight: 500 }}>{card.label}</p>
-            <p className="text-xl font-black" style={{ color: '#111547', fontFamily: 'Manrope, sans-serif' }}>{statValues[i]}</p>
-          </Link>
-        ))}
-        {/* 챗봇 카드 */}
-        <Link href="/chat" className="p-5 flex flex-col items-center justify-center hover:shadow-md transition-shadow" style={{ borderRadius: 32, background: '#111547', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-          <img src="/images/image 4.png" alt="챗봇" className="w-10 h-10 mb-2" />
-          <p className="text-[11px] font-medium text-white">챗봇 바로가기</p>
-        </Link>
+      {/* 챗키스 소개 배너 */}
+      <div className="flex items-center justify-between px-16" style={{ borderRadius: 32, background: '#111547', minHeight: 240 }}>
+        <div className="flex flex-col gap-4">
+          <span className="px-3 py-1 rounded-full text-xs font-medium self-start" style={{ background: 'rgba(225,0,127,0.80)', color: '#FFF' }}>Chat-Ki-S</span>
+          <h2 className="text-white" style={{ fontSize: 28, fontWeight: 600, lineHeight: '36px' }}>Chat-Ki-S: Chatbot과 함께하는 Kiwoom Life Study</h2>
+          <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 15, lineHeight: '24px' }}>임직원 여러분의 많은 관심과 적극적인 사용 부탁드립니다.</p>
+          <div className="flex gap-3 mt-1">
+            <Link href="/intranet/onboarding" className="text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.30)' }}>챗키스 알아보기</Link>
+            <Link href="/chat" className="text-sm font-medium px-6 py-2.5 rounded-full" style={{ background: '#E1007F', color: '#FFF' }}>키링에게 물어보기</Link>
+          </div>
+        </div>
+        <img src="/images/image 4.png" alt="Chat-Ki-S" className="w-40 h-40 opacity-80" />
       </div>
 
-      {/* 공지사항 배너 + 롤링 */}
+      {/* 공지사항 롤링 */}
       <div className="flex gap-4">
-        <Link href="/intranet/notices" className="flex items-center justify-center text-white font-medium flex-shrink-0" style={{ width: 165, height: 83, borderRadius: 32, background: '#E1017F', fontSize: 16 }}>
+        <Link href="/intranet/notices" className="flex items-center justify-center text-white font-medium flex-shrink-0" style={{ width: 120, height: 52, borderRadius: 32, background: '#E1017F', fontSize: 14 }}>
           공지사항
         </Link>
-        <div className="flex-1 flex items-center bg-white px-8 overflow-hidden" style={{ height: 83, borderRadius: 32, border: '1px solid #F8FAFC' }}>
+        <div className="flex-1 flex items-center bg-white px-8 overflow-hidden" style={{ height: 52, borderRadius: 32, border: '1px solid #F8FAFC' }}>
           {notices.length > 0 ? (
             <div className="relative w-full h-full flex items-center">
               {notices.map((n, i) => (
@@ -222,7 +220,7 @@ export default function IntranetDashboard() {
                   <p className="text-xs font-medium mb-1" style={{ color: '#111547' }}>연차 신청 ({l.startDate})</p>
                   <p style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>{l.reason || '개인 사유'}</p>
                 </div>
-                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...TAG_STYLES.REVIEW, fontFamily: 'Manrope' }}>REVIEW</span>
+                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...(TAG_STYLES[l.status] || TAG_STYLES.pending), fontFamily: 'Manrope' }}>{l.status === 'approved' ? '승인 완료' : l.status === 'rejected' ? '반려' : '승인 대기'}</span>
               </Link>
             ))}
             {expenses.filter(e => e.status === 'pending').slice(0, 2).map((e) => (
@@ -231,7 +229,7 @@ export default function IntranetDashboard() {
                   <p className="text-xs font-medium mb-1" style={{ color: '#111547' }}>{e.title}</p>
                   <p style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>{e.amount.toLocaleString()}원 · {e.expenseDate}</p>
                 </div>
-                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...TAG_STYLES.NORMAL, fontFamily: 'Manrope' }}>NORMAL</span>
+                <span className="font-black px-3 py-1 rounded-full" style={{ fontSize: 9, ...(TAG_STYLES[e.status] || TAG_STYLES.pending), fontFamily: 'Manrope' }}>{e.status === 'approved' ? '승인 완료' : e.status === 'rejected' ? '반려' : '승인 대기'}</span>
               </Link>
             ))}
             {(pendingLeaves + pendingExpenses) === 0 && (

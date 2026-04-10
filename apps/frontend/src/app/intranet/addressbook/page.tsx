@@ -220,9 +220,6 @@ export default function AddressBookPage() {
                       <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${gradColor} mb-3 flex items-center justify-center text-white text-2xl font-bold shadow-md`}>
                         {emp.name.slice(0, 1)}
                       </div>
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${badge.color}`}>
-                        {badge.text}
-                      </span>
                     </div>
 
                     <div className="text-center mb-4">

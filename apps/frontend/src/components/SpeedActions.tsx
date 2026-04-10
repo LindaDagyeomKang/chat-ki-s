@@ -14,7 +14,7 @@ interface SpeedActionsProps {
   actions: SpeedAction[]
 }
 
-export default function SpeedActions({ title = 'Speed 작성', actions }: SpeedActionsProps) {
+export default function SpeedActions({ title = 'Speed 메뉴', actions }: SpeedActionsProps) {
   return (
     <div className="px-6 py-8" style={{ borderBottom: '1px solid #F8FAFC' }}>
       <p style={{ color: '#111547', fontSize: 14, fontFamily: 'Manrope', fontWeight: 700, marginBottom: 16 }}>{title}</p>

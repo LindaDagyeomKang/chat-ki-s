@@ -76,12 +76,12 @@ export default function HRPage() {
     <div className="flex flex-1 min-h-0">
     <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole}>
       <SpeedActions actions={[
-        { label: '연차 신청', href: '/intranet/leaves', iconSvg: <svg width="16" height="16" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#E1007F"/></svg> },
-        { label: '인사평가', href: '/intranet/hr', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M9 16.2L4.8 12l1.4-1.4L9 13.4 14.6 7.8 16 9.2 9 16.2zM2 20c-.55 0-1.02-.2-1.41-.59C.2 19.02 0 18.55 0 18V4c0-.55.2-1.02.59-1.41C.98 2.2 1.45 2 2 2h2V0h2v2h8V0h2v2h2c.55 0 1.02.2 1.41.59.39.39.59.86.59 1.41v14c0 .55-.2 1.02-.59 1.41-.39.39-.86.59-1.41.59H2zm0-2h16V8H2v10z" fill="#6366F1"/></svg> },
-        { label: '교육관리', href: '/intranet/hr', iconSvg: <svg width="16" height="16" viewBox="0 0 20 18" fill="none"><path d="M10 0L0 6l10 6 8-4.74V14h2V6L10 0zM10 16.18L2 11.36V8.27L10 13.09 18 8.27v3.09L10 16.18z" fill="#F97316"/></svg> },
-        { label: '급여관리', href: '/intranet/hr', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 17.93c-3.95.49-7.4-2.13-8.36-5.53h2.05c.8 2.23 3.1 3.6 5.31 3.6V17.93zM11 14H9V9h2v5zm0-7H9V5h2v2z" fill="#10B981"/></svg> },
-        { label: '복리후생', href: '/intranet/hr', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3.22l-.61-.6a5.5 5.5 0 00-7.78 7.77L10 18.78l8.39-8.4a5.5 5.5 0 00-7.78-7.77l-.61.61z" fill="#E1007F"/></svg> },
-        { label: '더보기', href: '/intranet/hr', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="4" r="2" fill="#94A3B8"/><circle cx="10" cy="4" r="2" fill="#94A3B8"/><circle cx="16" cy="4" r="2" fill="#94A3B8"/><circle cx="4" cy="10" r="2" fill="#94A3B8"/><circle cx="10" cy="10" r="2" fill="#94A3B8"/><circle cx="16" cy="10" r="2" fill="#94A3B8"/></svg> },
+        { label: '메일쓰기', href: '/intranet/mails', iconSvg: <svg width="16" height="13" viewBox="0 0 20 16" fill="none"><path d="M18 0H2C.9 0 .01.9.01 2L0 14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V2l8 5 8-5v2z" fill="#E1007F"/></svg> },
+        { label: '기안하기', href: '/intranet/expenses', iconSvg: <svg width="14" height="16" viewBox="0 0 16 20" fill="none"><path d="M10 0H2C.9 0 .01.9.01 2L0 18c0 1.1.89 2 1.99 2H14c1.1 0 2-.9 2-2V6l-6-6zM2 18V2h7v5h5v11H2zm2-4h8v2H4v-2zm0-4h8v2H4v-2z" fill="#6366F1"/></svg> },
+        { label: '자원예약', href: '/intranet/rooms', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7 0h6v2H7V0zM9 12h2V7H9v5zm1-12C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#10B981"/></svg> },
+        { label: '주소록', href: '/intranet/addressbook', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15 8a3 3 0 100-6 3 3 0 000 6zm-8 0a3 3 0 100-6 3 3 0 000 6zm0 2c-2.33 0-7 1.17-7 3.5V16h14v-2.5C14 11.17 9.33 10 7 10zm8 0c-.29 0-.62.02-.97.05A4.22 4.22 0 0118 13.5V16h2v-2.5C20 11.17 17.33 10 15 10z" fill="#F97316"/></svg> },
+        { label: '일정관리', href: '/intranet/calendar', iconSvg: <svg width="16" height="16" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#3B82F6"/></svg> },
+        { label: '더보기', href: '/intranet', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="4" r="2" fill="#94A3B8"/><circle cx="10" cy="4" r="2" fill="#94A3B8"/><circle cx="16" cy="4" r="2" fill="#94A3B8"/><circle cx="4" cy="10" r="2" fill="#94A3B8"/><circle cx="10" cy="10" r="2" fill="#94A3B8"/><circle cx="16" cy="10" r="2" fill="#94A3B8"/></svg> },
       ]} />
     </IntranetSidebar>
 
@@ -277,7 +277,7 @@ export default function HRPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span style={{ color: '#111547', fontSize: 13, fontFamily: 'Manrope', fontWeight: 700 }}>{e.amount.toLocaleString()}원</span>
-                    <StatusBadge status={e.status} label={e.status === 'approved' ? '승인' : e.status === 'rejected' ? '반려' : '대기'} />
+                    <StatusBadge status={e.status} label={e.status === 'approved' ? '승인 완료' : e.status === 'rejected' ? '반려' : '승인 대기'} />
                   </div>
                 </div>
               ))

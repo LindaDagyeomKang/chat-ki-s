@@ -232,9 +232,12 @@ export async function chatRoutes(app: FastifyInstance) {
       }
     }
 
-    // 전사 일정 (매월 15일)
-    for (let m = 1; m <= 12; m++) {
-      events.push({ type: 'company', name: '', date: `${new Date().getFullYear()}-${String(m).padStart(2, '0')}-15`, detail: '전사 타운홀 미팅', color: '#6366F1' })
+    // 전사 일정만: calendar_events에서 is_company = true인 것만
+    const { calendarEvents: calTable } = require('../db/schema')
+    const calEvents = await db.select().from(calTable)
+      .where(and(eq(calTable.userId, payload.sub), eq(calTable.isCompany, true)))
+    for (const ce of calEvents as any[]) {
+      events.push({ type: 'company', name: '', date: ce.eventDate, detail: ce.title, color: ce.color || '#6366F1' })
     }
 
     // 날짜순 정렬

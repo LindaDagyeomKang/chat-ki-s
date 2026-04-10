@@ -3,7 +3,7 @@
  * LLM이 요청한 함수를 실행하고 결과를 반환합니다.
  */
 import { db } from '../db'
-import { employees, users, mails, notices, leaveRequests, expenses, assignments, calendarEvents, surveyQuestions, surveyResponses } from '../db/schema'
+import { employees, users, mails, notices, leaveRequests, expenses, assignments, calendarEvents, surveyQuestions, surveyResponses, meetingRooms, roomReservations } from '../db/schema'
 import { eq, desc, asc, and, gte, lte, or, ilike, sql } from 'drizzle-orm'
 
 const EXEC_RANKS = ['사장', '부사장', '전무', '상무', '이사']
@@ -154,19 +154,39 @@ export async function executeTool(
     }
 
     case 'get_schedule': {
-      const targetDate = args.date || new Date().toISOString().split('T')[0]
-      const targetDay = new Date(targetDate)
+      const { date, month, companyOnly } = args
       const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+
+      // 월간 조회
+      if (month) {
+        const [y, m] = month.split('-').map(Number)
+        const startDate = `${month}-01`
+        const endDate = `${month}-${new Date(y, m, 0).getDate()}`
+        const conditions = [eq(calendarEvents.userId, userId), gte(calendarEvents.eventDate, startDate), lte(calendarEvents.eventDate, endDate)]
+        if (companyOnly) conditions.push(eq(calendarEvents.isCompany, true))
+        const events = await db.select().from(calendarEvents)
+          .where(and(...conditions))
+          .orderBy(asc(calendarEvents.eventDate), asc(calendarEvents.startTime))
+        if (events.length === 0) return { result: `${y}년 ${m}월${companyOnly ? ' 전사' : ''} 일정이 없습니다.` }
+        const list = events.map((e: any, i: number) => `${i + 1}. ${e.eventDate} ${e.startTime}${e.endTime ? `~${e.endTime}` : ''} ${e.title}${e.location ? ` (${e.location})` : ''}`).join('\n')
+        return { result: `${y}년 ${m}월${companyOnly ? ' 전사' : ''} 일정 ${events.length}건:\n${list}` }
+      }
+
+      // 특정 날짜 조회
+      const targetDate = date || new Date().toISOString().split('T')[0]
+      const targetDay = new Date(targetDate)
       const dayName = dayNames[targetDay.getDay()]
       const isToday = targetDate === new Date().toISOString().split('T')[0]
       const dateLabel = isToday ? `오늘(${dayName}요일)` : `${targetDate}(${dayName}요일)`
 
+      const conditions = [eq(calendarEvents.userId, userId), eq(calendarEvents.eventDate, targetDate)]
+      if (companyOnly) conditions.push(eq(calendarEvents.isCompany, true))
       const events = await db.select().from(calendarEvents)
-        .where(and(eq(calendarEvents.userId, userId), eq(calendarEvents.eventDate, targetDate)))
+        .where(and(...conditions))
         .orderBy(asc(calendarEvents.startTime))
-      if (events.length === 0) return { result: `${dateLabel}에 등록된 일정이 없습니다.` }
-      const list = events.map((e, i) => `${i + 1}. ${e.startTime}${e.endTime ? `~${e.endTime}` : ''} ${e.title} (${e.location || '장소 미정'})`).join('\n')
-      return { result: `${dateLabel} 일정 ${events.length}건:\n${list}` }
+      if (events.length === 0) return { result: `${dateLabel}에${companyOnly ? ' 전사' : ''} 등록된 일정이 없습니다.` }
+      const list = events.map((e: any, i: number) => `${i + 1}. ${e.startTime}${e.endTime ? `~${e.endTime}` : ''} ${e.title} (${e.location || '장소 미정'})`).join('\n')
+      return { result: `${dateLabel}${companyOnly ? ' 전사' : ''} 일정 ${events.length}건:\n${list}` }
     }
 
     case 'get_notices': {
@@ -185,6 +205,45 @@ export async function executeTool(
       const statusLabels: Record<string, string> = { pending: '시작 전', submitted: '제출됨', completed: '완료' }
       const list = rows.map((a, i) => `${i + 1}. ${a.title} (${statusLabels[a.status] ?? a.status})${a.dueDate ? ` — 마감: ${a.dueDate}` : ''}`).join('\n')
       return { result: `과제 목록:\n${list}` }
+    }
+
+    case 'check_leave_status': {
+      const checkName = (args.name || '').trim()
+      if (!checkName) return { result: '직원 이름을 입력해 주세요.' }
+
+      // 직원 찾기 (정확 매칭 우선)
+      let target = (await db.select().from(employees).where(eq(employees.name, checkName)).limit(1))[0]
+      if (!target) {
+        target = (await db.select().from(employees).where(ilike(employees.name, `%${checkName}%`)).orderBy(sql`LENGTH(name)`).limit(1))[0]
+      }
+      if (!target) return { result: `"${checkName}" 직원을 찾을 수 없습니다.` }
+
+      // users 테이블에서 해당 직원의 user_id 찾기
+      const targetUser = (await db.select().from(users).where(eq(users.name, target.name)).limit(1))[0]
+
+      const todayStr = new Date().toISOString().split('T')[0]
+
+      if (targetUser) {
+        // leave_requests에서 오늘 날짜에 승인된 휴가가 있는지 확인
+        const todayLeave = await db.select().from(leaveRequests)
+          .where(and(
+            eq(leaveRequests.userId, targetUser.id),
+            lte(leaveRequests.startDate, todayStr),
+            gte(leaveRequests.endDate, todayStr),
+          ))
+          .limit(1)
+
+        if (todayLeave.length > 0) {
+          const l = todayLeave[0] as any
+          const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
+          const leaveLabel = typeLabels[l.leaveType] || l.leaveType
+          const statusLabel = l.status === 'approved' ? '승인' : l.status === 'pending' ? '승인 대기중' : l.status
+          return { result: `${target.name} ${target.rank || ''}님은 오늘 ${leaveLabel} 중입니다. (${statusLabel}, ${l.startDate}~${l.endDate})` }
+        }
+      }
+
+      // 휴가 아님
+      return { result: `${target.name} ${target.rank || ''}님은 오늘 휴가가 아닙니다. (${target.team || ''} 소속)` }
     }
 
     case 'find_substitute': {
@@ -224,12 +283,26 @@ export async function executeTool(
     }
 
     case 'search_employees': {
-      const { name, department, topic, phone } = args
+      const { name, department, topic, phone, rank: searchRank, count: countOnly } = args
+
+      // 전체 직원 수 조회
+      if (countOnly) {
+        const countResult = await db.execute(sql`SELECT count(*) as cnt FROM employees`)
+        const cnt = (countResult as any).rows?.[0]?.cnt || (countResult as any)[0]?.cnt || 0
+        return { result: `키움증권 전체 임직원 수: ${cnt}명` }
+      }
 
       if (phone) {
         const rows = await db.select().from(employees).where(ilike(employees.phone, `%${phone}%`)).limit(5)
         if (rows.length === 0) return { result: `"${phone}" 번호를 가진 직원을 찾지 못했습니다.` }
         return { result: formatEmployeeResults(rows, ctx) }
+      }
+
+      // 직급 검색
+      if (searchRank) {
+        const rows = await db.select().from(employees).where(eq(employees.rank, searchRank)).limit(10)
+        if (rows.length === 0) return { result: `"${searchRank}" 직급의 직원을 찾지 못했습니다.` }
+        return { result: `${searchRank} 직급 직원 ${rows.length}명:\n\n${formatEmployeeResults(rows, ctx)}` }
       }
 
       const conditions: any[] = []
@@ -392,6 +465,133 @@ export async function executeTool(
           confirmationMessage: `${catLabels[category] || title} ${amount?.toLocaleString()}원을 정산 신청할까요?`,
         },
       }
+    }
+
+    case 'check_room_availability': {
+      const checkDate = args.date || new Date().toISOString().split('T')[0]
+      const roomName = (args.roomName || '').trim()
+
+      // 전체 회의실 목록
+      const allRooms = await db.select().from(meetingRooms).orderBy(asc(meetingRooms.name))
+
+      // 해당 날짜 예약 현황
+      const reservations = await db.select({
+        roomId: roomReservations.roomId,
+        roomName: meetingRooms.name,
+        startTime: roomReservations.startTime,
+        endTime: roomReservations.endTime,
+        title: roomReservations.title,
+        userName: users.name,
+      })
+        .from(roomReservations)
+        .innerJoin(meetingRooms, eq(roomReservations.roomId, meetingRooms.id))
+        .innerJoin(users, eq(roomReservations.userId, users.id))
+        .where(eq(roomReservations.reserveDate, checkDate))
+        .orderBy(asc(meetingRooms.name), asc(roomReservations.startTime))
+
+      if (roomName) {
+        // 특정 회의실
+        const room = allRooms.find((r: any) => r.name.includes(roomName))
+        if (!room) return { result: `"${roomName}" 회의실을 찾을 수 없습니다. 등록된 회의실: ${allRooms.map((r: any) => r.name).join(', ')}` }
+        const roomRes = reservations.filter((r: any) => r.roomName === room.name)
+        if (roomRes.length === 0) return { result: `${checkDate} ${room.name} (${room.floor}, ${room.capacity}명)은 종일 비어있습니다.` }
+        const list = roomRes.map((r: any) => `• ${r.startTime}~${r.endTime} ${r.title} (${r.userName})`).join('\n')
+        return { result: `${checkDate} ${room.name} 예약 현황:\n${list}` }
+      }
+
+      // 전체 회의실
+      const lines = allRooms.map((room: any) => {
+        const roomRes = reservations.filter((r: any) => r.roomName === room.name)
+        if (roomRes.length === 0) return `• ${room.name} (${room.floor}, ${room.capacity}명) — 비어있음`
+        const slots = roomRes.map((r: any) => `${r.startTime}~${r.endTime}`).join(', ')
+        return `• ${room.name} (${room.floor}, ${room.capacity}명) — 예약: ${slots}`
+      }).join('\n')
+      return { result: `${checkDate} 회의실 현황:\n${lines}` }
+    }
+
+    case 'book_room': {
+      const { roomName: bookRoomName, date: bookDate, startTime: bookStart, endTime: bookEnd, title: bookTitle, attendees: bookAttendees } = args
+      if (!bookRoomName || !bookDate || !bookStart || !bookEnd || !bookTitle) {
+        return { result: '회의실 이름, 날짜, 시작/종료 시간, 회의 제목이 필요합니다.' }
+      }
+
+      // 연도 보정
+      let fixedDate = bookDate
+      const currentYear = new Date().getFullYear()
+      if (parseInt(fixedDate.split('-')[0]) < currentYear) {
+        fixedDate = `${currentYear}-${fixedDate.split('-').slice(1).join('-')}`
+      }
+
+      // 회의실 찾기
+      const allRooms = await db.select().from(meetingRooms)
+      const room = allRooms.find((r: any) => r.name.includes(bookRoomName))
+      if (!room) return { result: `"${bookRoomName}" 회의실을 찾을 수 없습니다. 등록된 회의실: ${allRooms.map((r: any) => r.name).join(', ')}` }
+
+      // 충돌 검사
+      const existing = await db.select().from(roomReservations)
+        .where(and(eq(roomReservations.roomId, room.id), eq(roomReservations.reserveDate, fixedDate)))
+      const conflict = existing.some((r: any) => bookStart < r.endTime && bookEnd > r.startTime)
+      if (conflict) {
+        const slots = existing.map((r: any) => `${r.startTime}~${r.endTime}`).join(', ')
+        return { result: `${room.name}은 ${fixedDate} ${bookStart}~${bookEnd}에 이미 예약이 있습니다. 기존 예약: ${slots}` }
+      }
+
+      // 예약 생성
+      await db.insert(roomReservations).values({
+        roomId: room.id, userId, title: bookTitle,
+        reserveDate: fixedDate, startTime: bookStart, endTime: bookEnd,
+        attendees: bookAttendees || '',
+      })
+      return { result: `회의실 예약이 완료되었습니다.\n• 회의실: ${room.name} (${room.floor}, ${room.capacity}명)\n• 날짜: ${fixedDate}\n• 시간: ${bookStart}~${bookEnd}\n• 회의: ${bookTitle}` }
+    }
+
+    case 'draft_email': {
+      const { recipient, cc, subject, details, senderDept } = args
+      if (!subject || !details) return { result: '메일 용건과 포함할 내용을 알려주세요.' }
+
+      const EMAIL_GUIDE = `[메일 작성 가이드라인]
+당신은 키움증권의 커뮤니케이션 지원 AI입니다. 아래 규칙에 따라 격식 있는 비즈니스 이메일을 작성하세요.
+
+[기본 원칙]
+- 극도로 정중한 경어체 사용
+- 구조: 제목 → 수신/참조 → 인사말 → 핵심 내용(불렛) → 요청/맺음말 → 서명
+- 금기: 농담, 구어체, 이모지 금지
+
+[부서별 특화]
+- IB/기업금융: "본 메일은 대외비(Confidential) 자료를 포함합니다." 필수
+- 리서치/운용: 수치 강조 + 표준 Disclaimer 삽입
+- 리스크/컴플라이언스: 관련 법령 언급, 지시형 정중체
+
+[데이터 검증]
+- 일정: 날짜, 시간, 장소 필수
+- 금융: 금액, 비율, 수량 필수
+- 누락 시 메일 작성하지 말고 필요 항목만 리스트로 질의
+
+[메일 구조]
+- 제목: [키움증권] [부서명] 용건 핵심 요약
+- 수신/참조: [수신: ○○ 귀하 / 참조: △△ 귀하]
+- 서명: 키움증권 [부서명] [이름] [직함] / T. 내선번호 | E. 이메일`
+
+      // 유저 프로필 정보
+      const dept = senderDept || ctx.userTeam || ctx.userDivision || ''
+      const senderInfo = `발신자: ${ctx.userName || ''} (${dept})`
+
+      const prompt = `${EMAIL_GUIDE}\n\n${senderInfo}\n수신자: ${recipient || '(미지정)'}\n${cc ? `참조: ${cc}\n` : ''}용건: ${subject}\n상세 내용: ${details}`
+
+      // AI에 메일 초안 요청
+      const AI_URL = process.env.AI_SERVICE_URL ?? 'http://localhost:8001'
+      try {
+        const res = await fetch(`${AI_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: prompt, mode: 'rag' }),
+        })
+        if (res.ok) {
+          const body = await res.json() as any
+          return { result: body.answer || '메일 초안 생성에 실패했습니다.' }
+        }
+      } catch {}
+      return { result: '메일 작성 중 오류가 발생했습니다.' }
     }
 
     case 'search_glossary': {
