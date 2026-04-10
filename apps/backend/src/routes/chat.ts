@@ -1,10 +1,8 @@
 import { FastifyInstance } from 'fastify'
 import { eq, and } from 'drizzle-orm'
 import { db } from '../db'
-import { users, chatLogs, employees } from '../db/schema'
+import { users, employees } from '../db/schema'
 import { sql } from 'drizzle-orm'
-import { searchKnowledge } from '../services/knowledge'
-import { callLLM } from '../services/llm'
 
 export async function chatRoutes(app: FastifyInstance) {
   // GET /api/me — portal session check
@@ -245,48 +243,4 @@ export async function chatRoutes(app: FastifyInstance) {
     return reply.send(events)
   })
 
-  // POST /api/chat — question → knowledge lookup → LLM → answer
-  app.post<{ Body: { question: string } }>(
-    '/api/chat',
-    {
-      onRequest: [app.authenticate],
-      schema: {
-        body: {
-          type: 'object',
-          required: ['question'],
-          properties: {
-            question: { type: 'string', minLength: 1 },
-          },
-        },
-      },
-    },
-    async (request, reply) => {
-      const payload = request.user as { sub: string; employeeId: string }
-      const { question } = request.body
-
-      // 1. Knowledge lookup (ChromaDB or static FAQ)
-      const sources = await searchKnowledge(question)
-
-      // 2. LLM call
-      const { answer, sources: usedSources } = await callLLM(question, sources)
-
-      // 3. Log the chat
-      const [log] = await db
-        .insert(chatLogs)
-        .values({
-          userId: payload.sub,
-          question,
-          answer,
-          sources: usedSources,
-        })
-        .returning({ id: chatLogs.id, createdAt: chatLogs.createdAt })
-
-      return reply.send({
-        chatLogId: log.id,
-        answer,
-        sources: usedSources,
-        createdAt: log.createdAt,
-      })
-    }
-  )
 }
