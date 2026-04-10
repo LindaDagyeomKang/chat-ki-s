@@ -99,6 +99,16 @@ CREATE TABLE IF NOT EXISTS agent_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 좋은 질문-답변 저장 (도움이 됐어요 피드백)
+CREATE TABLE IF NOT EXISTS good_answers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  conversation_id UUID,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Intranet: 메일함
 CREATE TABLE IF NOT EXISTS mails (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -312,7 +322,7 @@ export async function runMigrations(): Promise<void> {
           DELETE FROM calendar_events; DELETE FROM survey_responses; DELETE FROM survey_questions;
           DELETE FROM mails; DELETE FROM assignments; DELETE FROM notices;
           DELETE FROM leave_requests; DELETE FROM expenses;
-          DELETE FROM feedback; DELETE FROM chat_logs; DELETE FROM agent_logs;
+          DELETE FROM good_answers; DELETE FROM feedback; DELETE FROM chat_logs; DELETE FROM agent_logs;
           DELETE FROM messages; DELETE FROM conversations;
           DELETE FROM employees; DELETE FROM users;
         `)

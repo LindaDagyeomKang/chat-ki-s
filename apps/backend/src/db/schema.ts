@@ -281,7 +281,7 @@ export type DocumentRow = typeof documents.$inferSelect
 export type NewDocument = typeof documents.$inferInsert
 
 // ──────────────────────────────────────
-// Agent 실행 로그
+// Agent 실행 로그 (기존 유지)
 // ──────────────────────────────────────
 export const agentLogs = pgTable('agent_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -289,10 +289,22 @@ export const agentLogs = pgTable('agent_logs', {
   conversationId: uuid('conversation_id'),
   action: varchar('action', { length: 50 }).notNull(),
   params: jsonb('params'),
-  result: varchar('result', { length: 20 }).notNull(), // 'success' | 'failed' | 'cancelled' | 'confirmed'
+  result: varchar('result', { length: 20 }).notNull(),
   responseTimeMs: integer('response_time_ms'),
   promptTokens: integer('prompt_tokens').default(0),
   completionTokens: integer('completion_tokens').default(0),
   totalTokens: integer('total_tokens').default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ──────────────────────────────────────
+// 좋은 질문-답변 저장 (도움이 됐어요 피드백)
+// ──────────────────────────────────────
+export const goodAnswers = pgTable('good_answers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id),
+  conversationId: uuid('conversation_id'),
+  question: text('question').notNull(),
+  answer: text('answer').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })

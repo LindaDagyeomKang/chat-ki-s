@@ -635,11 +635,7 @@ function formatEmployeeResults(rows: any[], ctx: ToolContext): string {
     if (EXEC_RANKS.includes(e.rank)) {
       return `${i + 1}. ${e.name} ${e.rank}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ※ 임원 연락은 비서실(내선 1000)을 통해 문의해 주세요.`
     }
-    const isSame = ctx.userDivision && e.division === ctx.userDivision
-    const base = `${i + 1}. ${e.name} ${e.rank ?? ''}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ${e.division ?? ''}${e.team ? ` > ${e.team}` : ''}\n   이메일: ${e.email ?? '-'}`
-    if (isSame) {
-      return `${base}\n   내선: ${e.phone ?? '-'}\n   담당: ${e.duty ?? '-'}`
-    }
+    const base = `${i + 1}. ${e.name} ${e.rank ?? ''}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ${e.division ?? ''}${e.team ? ` > ${e.team}` : ''}\n   이메일: ${e.email ?? '-'}\n   내선: ${e.phone ?? '-'}\n   담당: ${e.duty ?? '-'}`
     return base
   }).join('\n\n')
 }
