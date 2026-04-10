@@ -318,6 +318,11 @@ export async function conversationRoutes(app: FastifyInstance) {
       }
     }
 
+    // 빈 응답 방지
+    if (!assistantContent.trim()) {
+      assistantContent = '죄송합니다. 일시적으로 응답을 생성하지 못했습니다. 다시 질문해 주세요.'
+    }
+
     // Save assistant message
     const asstMsgResult = await db
       .insert(messages)
