@@ -230,7 +230,7 @@ export async function executeTool(
       const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
 
       // "우리팀", "우리 팀", "팀원" 등 팀 전체 조회
-      const teamKeywords = ['우리팀', '우리 팀', '팀원', '우리부서', '우리 부서', '같은팀', '같은 팀']
+      const teamKeywords = ['우리팀', '우리 팀', '저희팀', '저희 팀', '내 팀', '내팀', '소속팀', '소속 팀', '팀원', '우리부서', '우리 부서', '저희부서', '저희 부서', '같은팀', '같은 팀', 'my team', '우리']
       if (teamKeywords.some(kw => checkName.includes(kw))) {
         const myTeam = ctx.userTeam
         if (!myTeam) return { result: '소속 팀 정보를 확인할 수 없습니다.' }
