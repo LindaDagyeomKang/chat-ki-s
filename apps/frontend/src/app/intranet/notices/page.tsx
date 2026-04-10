@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getNotices } from '@/lib/api'
+import { getNotices, createNotice } from '@/lib/api'
 import type { Notice } from '@/lib/api'
 import IntranetSidebar from '@/components/IntranetSidebar'
 import SpeedActions from '@/components/SpeedActions'
@@ -29,6 +29,12 @@ export default function NoticesPage() {
   const [selected, setSelected] = useState<Notice | null>(null)
   const { userName, userDept, userRole } = useUser()
   const [activeTab, setActiveTab] = useState('board')
+  const [filterCategory, setFilterCategory] = useState<string | null>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [composing, setComposing] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newContent, setNewContent] = useState('')
+  const [newCategory, setNewCategory] = useState('일반')
   const { setPageContext, clearPageContext } = usePageContext()
 
   useEffect(() => {
@@ -121,12 +127,22 @@ export default function NoticesPage() {
             <h1 style={{ color: '#111547', fontSize: 30, fontFamily: 'Pretendard', fontWeight: 500, lineHeight: '36px' }}>전사 게시판</h1>
             <p style={{ color: 'rgba(17,21,71,0.50)', fontSize: 14, fontFamily: 'Pretendard', fontWeight: 500, lineHeight: '20px' }}>키움증권 임직원들의 소통과 정보 공유를 위한 공간입니다.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-6 py-2.5 rounded-full" style={{ background: '#E1E3E4', color: '#111547', fontSize: 14, fontWeight: 500 }}>
-              <svg width="14" height="9" viewBox="0 0 14 9" fill="none"><path d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z" fill="#111547"/></svg>
-              필터
+          <div className="flex items-center gap-2 relative">
+            <button onClick={() => setFilterOpen(!filterOpen)} className="flex items-center gap-2 px-6 py-2.5 rounded-full" style={{ background: filterCategory ? '#E1007F' : '#E1E3E4', color: filterCategory ? '#FFF' : '#111547', fontSize: 14, fontWeight: 500 }}>
+              <svg width="14" height="9" viewBox="0 0 14 9" fill="none"><path d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z" fill={filterCategory ? '#FFF' : '#111547'}/></svg>
+              {filterCategory || '필터'}
             </button>
-            <button className="flex items-center gap-2 px-8 py-2.5 rounded-full text-white" style={{ background: '#E1007F', fontSize: 14, fontWeight: 500, boxShadow: '0px 4px 6px -4px rgba(225,0,127,0.20), 0px 10px 15px -3px rgba(225,0,127,0.20)' }}>
+            {filterOpen && (
+              <div className="absolute right-0 top-12 bg-white rounded-2xl shadow-lg py-2 z-10" style={{ border: '1px solid #F1F5F9', minWidth: 140 }}>
+                {['전체', '인사', '보안', '경영지원', '총무', '일반'].map((cat) => (
+                  <button key={cat} onClick={() => { setFilterCategory(cat === '전체' ? null : cat); setFilterOpen(false) }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" style={{ color: '#111547' }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={() => setComposing(true)} className="flex items-center gap-2 px-8 py-2.5 rounded-full text-white" style={{ background: '#E1007F', fontSize: 14, fontWeight: 500, boxShadow: '0px 4px 6px -4px rgba(225,0,127,0.20), 0px 10px 15px -3px rgba(225,0,127,0.20)' }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 12H2.56875L9.9 4.66875L8.83125 3.6L1.5 10.9313V12ZM12.05 3.55L9.95 1.45L11.05 0.35C11.2333 0.166667 11.4625 0.075 11.7375 0.075C12.0125 0.075 12.2417 0.166667 12.425 0.35L13.15 1.075C13.3333 1.25833 13.425 1.4875 13.425 1.7625C13.425 2.0375 13.3333 2.26667 13.15 2.45L12.05 3.55ZM0 13.5V10.5L9.1 1.4L12.1 4.4L3 13.5H0Z" fill="white"/></svg>
               글쓰기
             </button>
@@ -184,7 +200,7 @@ export default function NoticesPage() {
               </tr>
             </thead>
             <tbody>
-              {notices.map((n, idx) => (
+              {notices.filter(n => !filterCategory || n.category === filterCategory).map((n, idx) => (
                 <tr
                   key={n.id}
                   onClick={() => setSelected(n)}
@@ -231,6 +247,34 @@ export default function NoticesPage() {
             <button className="w-8 h-8 rounded-full flex items-center justify-center text-xs" style={{ color: '#94A3B8' }}>&gt;</button>
           </div>
         </div>
+    {/* 글쓰기 모달 */}
+    {composing && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.3)' }}>
+        <div className="bg-white p-6 space-y-4" style={{ borderRadius: 24, width: 480 }}>
+          <h3 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>게시글 작성</h3>
+          <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl outline-none" style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
+            {['일반', '인사', '보안', '경영지원', '총무'].map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <input placeholder="제목" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl outline-none" style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }} />
+          <textarea placeholder="내용을 입력하세요" value={newContent} onChange={(e) => setNewContent(e.target.value)} rows={6}
+            className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none" style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }} />
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (!newTitle.trim() || !newContent.trim()) return
+                const created = await createNotice({ title: newTitle, content: newContent, category: newCategory })
+                setNotices((prev) => [created, ...prev])
+                setNewTitle(''); setNewContent(''); setNewCategory('일반'); setComposing(false)
+              }}
+              className="flex-1 py-2 text-white text-sm font-medium rounded-xl" style={{ background: '#E1007F' }}>등록</button>
+            <button onClick={() => { setComposing(false); setNewTitle(''); setNewContent(''); setNewCategory('일반') }}
+              className="flex-1 py-2 text-sm font-medium rounded-xl" style={{ background: '#F1F5F9', color: '#475569' }}>취소</button>
+          </div>
+        </div>
+      </div>
+    )}
     </main>
     </div>
   )

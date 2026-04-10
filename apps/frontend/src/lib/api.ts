@@ -180,6 +180,10 @@ export async function getNotices(): Promise<Notice[]> {
   return apiFetch<Notice[]>('/api/notices')
 }
 
+export async function createNotice(data: { title: string; content: string; category?: string }): Promise<Notice> {
+  return apiFetch('/api/notices', { method: 'POST', body: JSON.stringify(data) })
+}
+
 export async function getNotice(id: string): Promise<Notice> {
   return apiFetch<Notice>(`/api/notices/${id}`)
 }
