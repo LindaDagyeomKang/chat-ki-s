@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
-import { leaveRequests, expenses, assignments, users, mails, agentLogs } from '../db/schema'
+import { leaveRequests, expenses, assignments, users, mails } from '../db/schema'
 import { eq } from 'drizzle-orm'
 
 const LEAVE_LABELS: Record<string, string> = {
@@ -28,14 +28,7 @@ export async function agentExecuteRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     const { sub } = request.user as { sub: string }
     const { action, params } = request.body
-    const startTime = Date.now()
-
-    async function logExecution(result: string) {
-      await db.insert(agentLogs).values({
-        userId: sub, action, params, result,
-        responseTimeMs: Date.now() - startTime,
-      }).catch(() => {})
-    }
+    async function logExecution(_result: string) {}
 
     if (action === 'leave') {
       await db.insert(leaveRequests).values({

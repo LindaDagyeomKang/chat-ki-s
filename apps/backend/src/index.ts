@@ -16,7 +16,6 @@ import { mailRoutes } from './routes/mails'
 import { agentExecuteRoutes } from './routes/agentExecute'
 import { approvalRoutes } from './routes/approvals'
 import { assignmentRoutes } from './routes/assignments'
-import { agentLogsRoutes } from './routes/agentLogsRoute'
 import { employeeRoutes } from './routes/employees'
 import { calendarRoutes } from './routes/calendar'
 import { roomRoutes } from './routes/rooms'
@@ -67,7 +66,6 @@ app.register(mailRoutes)
 app.register(agentExecuteRoutes)
 app.register(approvalRoutes)
 app.register(assignmentRoutes)
-app.register(agentLogsRoutes)
 app.register(employeeRoutes)
 app.register(calendarRoutes)
 app.register(roomRoutes)

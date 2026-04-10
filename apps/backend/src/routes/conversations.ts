@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { SocketStream } from '@fastify/websocket'
 import { eq, asc } from 'drizzle-orm'
 import { db } from '../db'
-import { conversations, messages, agentLogs, surveyResponses, surveyQuestions, users as usersTable, mails } from '../db/schema'
+import { conversations, messages, surveyResponses, surveyQuestions, users as usersTable, mails } from '../db/schema'
 import type { Conversation, Message, SendMessageRequest, SendMessageResponse } from '@chat-ki-s/shared'
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL ?? 'http://localhost:8001'
@@ -171,7 +171,6 @@ export async function conversationRoutes(app: FastifyInstance) {
     let assistantContent = ''
     let agentAction: { action: string; params: Record<string, unknown>; confirmationMessage: string } | undefined
     let suggestedQuestions: string[] = []
-    const startTime = Date.now()
 
     try {
       const { executeTool } = require('../services/toolExecutor')
@@ -299,19 +298,7 @@ export async function conversationRoutes(app: FastifyInstance) {
           assistantContent = toolsBody.answer || ''
         }
 
-        // 토큰 로그
-        if (toolsBody.usage) {
-          await db.insert(agentLogs).values({
-            userId: payload.sub, conversationId,
-            action: 'tools_chat',
-            params: { message: content },
-            result: 'success',
-            responseTimeMs: Date.now() - startTime,
-            promptTokens: toolsBody.usage.prompt_tokens ?? 0,
-            completionTokens: toolsBody.usage.completion_tokens ?? 0,
-            totalTokens: toolsBody.usage.total_tokens ?? 0,
-          }).catch(() => {})
-        }
+        // agent_logs 제거됨 — good_answers로 대체
       }
     } catch (err) {
       // Function calling 실패 시 기존 RAG fallback
