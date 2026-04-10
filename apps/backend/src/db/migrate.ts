@@ -84,20 +84,8 @@ CREATE TABLE IF NOT EXISTS leave_requests (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Agent 실행 로그
-CREATE TABLE IF NOT EXISTS agent_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
-  conversation_id UUID,
-  action VARCHAR(50) NOT NULL,
-  params JSONB,
-  result VARCHAR(20) NOT NULL,
-  response_time_ms INTEGER,
-  prompt_tokens INTEGER DEFAULT 0,
-  completion_tokens INTEGER DEFAULT 0,
-  total_tokens INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- agent_logs 테이블 삭제 (good_answers로 대체)
+DROP TABLE IF EXISTS agent_logs;
 
 -- 좋은 질문-답변 저장 (도움이 됐어요 피드백)
 CREATE TABLE IF NOT EXISTS good_answers (
@@ -322,7 +310,7 @@ export async function runMigrations(): Promise<void> {
           DELETE FROM calendar_events; DELETE FROM survey_responses; DELETE FROM survey_questions;
           DELETE FROM mails; DELETE FROM assignments; DELETE FROM notices;
           DELETE FROM leave_requests; DELETE FROM expenses;
-          DELETE FROM good_answers; DELETE FROM feedback; DELETE FROM chat_logs; DELETE FROM agent_logs;
+          DELETE FROM good_answers; DELETE FROM feedback; DELETE FROM chat_logs;
           DELETE FROM messages; DELETE FROM conversations;
           DELETE FROM employees; DELETE FROM users;
         `)
