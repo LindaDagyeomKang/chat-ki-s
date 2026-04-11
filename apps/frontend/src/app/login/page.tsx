@@ -33,7 +33,7 @@ export default function LoginPage() {
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#111547', boxShadow: '0 8px 24px rgba(17,21,71,0.25)' }}>
             <img src="/images/image 4.png" alt="Chat-Ki-S" className="w-14 h-14" />
           </div>
-          <img src="/cl/02_PNG/키움증권_CI_logotype.png" alt="키움증권" style={{ height: 28 }} className="mx-auto mb-2" />
+          <img src="/kiwoom-logo.png" alt="키움증권" style={{ height: 28 }} className="mx-auto mb-2" />
           <p className="text-sm" style={{ color: '#94A3B8' }}>사내 인트라넷</p>
         </div>
 

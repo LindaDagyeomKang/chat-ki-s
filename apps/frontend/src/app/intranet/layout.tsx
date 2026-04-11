@@ -79,7 +79,7 @@ function IntranetLayoutInner({ children }: { children: React.ReactNode }) {
       <header className="flex-shrink-0 z-10" style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(6px)', borderBottom: '1px solid #F1F5F9' }}>
         <div className="flex items-center justify-between px-6 h-16">
           <div className="flex items-center gap-16">
-            <Link href="/intranet"><img src="/cl/02_PNG/키움증권_CI_logotype.png" alt="키움증권" style={{ height: 30 }} /></Link>
+            <Link href="/intranet"><img src="/kiwoom-logo.png" alt="키움증권" style={{ height: 30 }} /></Link>
             <nav className="flex items-center gap-6">
               {allNav.map((item) => {
                 const isActive = pathname === item.href || (item.href !== '/intranet' && pathname.startsWith(item.href))

@@ -160,50 +160,30 @@ export default function IntranetDashboard() {
       {/* 받은 편지함 + 결재할 문서 */}
       <div className="grid grid-cols-2 gap-8">
         {/* 받은 편지함 */}
-        <div className="bg-white" style={{ borderRadius: 32, padding: '24px 24px 31px 24px', border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>받은 편지함</h2>
+        <div className="bg-white" style={{ borderRadius: 32, padding: 24, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>받은 편지함</h2>
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FDF2F8', color: '#E1007F', fontFamily: 'Manrope', fontWeight: 600 }}>{mails.length}</span>
+            </div>
             <Link href="/intranet/mails" className="text-xs font-medium" style={{ color: '#E1007F' }}>모두보기</Link>
           </div>
-          <div className="flex items-center gap-6">
-            {(() => {
-              const maxMails = 500
-              const usagePercent = Math.min(Math.round((mails.length / maxMails) * 100), 100)
-              const circumference = 2 * Math.PI * 40
-              const offset = circumference * (1 - usagePercent / 100)
-              return (
-                <div className="relative flex-shrink-0" style={{ width: 96, height: 96 }}>
-                  <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-                    <circle cx="48" cy="48" r="40" stroke="#F1F3F6" strokeWidth="8" fill="none" />
-                    <circle cx="48" cy="48" r="40" stroke="#E1007F" strokeWidth="8" fill="none"
-                      strokeDasharray={`${circumference}`}
-                      strokeDashoffset={`${offset}`}
-                      strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-black" style={{ fontSize: 18, color: '#111547', fontFamily: 'Manrope' }}>{usagePercent}%</span>
-                    <span style={{ fontSize: 8, color: '#46464F' }}>{mails.length}/500</span>
+          <div className="space-y-2">
+            {mails.length === 0 ? (
+              <p className="text-sm" style={{ color: '#94A3B8' }}>새 메일이 없습니다</p>
+            ) : (
+              mails.slice(0, 4).map((m) => (
+                <Link key={m.id} href="/intranet/mails" className="flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg px-2 transition-colors">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: !m.isRead ? '#E1007F' : 'transparent' }} />
+                    <span className="text-xs font-medium truncate" style={{ color: '#111547' }}>{m.subject}</span>
                   </div>
-                </div>
-              )
-            })()}
-            <div className="flex-1 space-y-3">
-              {mails.length === 0 ? (
-                <p className="text-sm" style={{ color: '#94A3B8' }}>새 메일이 없습니다</p>
-              ) : (
-                mails.slice(0, 5).map((m) => (
-                  <div key={m.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: !m.isRead ? '#E1007F' : '#3B82F6' }} />
-                      <span className="text-xs font-medium" style={{ color: '#111547' }}>{m.subject}</span>
-                    </div>
-                    <span style={{ fontSize: 10, color: '#46464F', fontFamily: 'Manrope' }}>
-                      {new Date(m.receivedAt || m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
+                  <span className="flex-shrink-0 ml-2" style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'Manrope' }}>
+                    {new Date(m.receivedAt || m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                  </span>
+                </Link>
+              ))
+            )}
           </div>
         </div>
 
