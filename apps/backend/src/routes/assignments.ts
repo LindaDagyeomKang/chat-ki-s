@@ -1,18 +1,65 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { assignments, users, mails } from '../db/schema'
-import { desc, eq, or } from 'drizzle-orm'
+import { desc, eq, or, and } from 'drizzle-orm'
+
+const DEFAULT_MISSIONS = [
+  { title: '연차 신청 해보기', description: '직접 연차 신청을 한번 해보세요. 시스템을 직접 써보는 것이 자율성을 향한 첫 번째 단계입니다!' },
+  { title: '사내 메신저 설치 및 인사', description: '동료들과 소통하는 가장 빠른 방법입니다. 가벼운 인사와 함께 팀 채널에 합류해 보세요.' },
+  { title: '팀원들과 점심 식사', description: '업무 외적인 대화를 통해 서로를 더 잘 알아가는 시간을 가져보시길 권장합니다.' },
+  { title: '비즈니스 이메일 서명 설정', description: '우리 기업의 아이덴티티를 나타내는 표준 서명을 설정하여 전문성을 갖춰 보세요.' },
+  { title: '보안 서약서 작성', description: '중요한 정보 자산을 보호하는 것은 금융인의 기본입니다. 내용을 꼼꼼히 확인하고 서명해 주세요.' },
+  { title: '사원증 등록', description: '사원증은 Kiwoom 가족의 증표입니다. 분실하지 않도록 유의해주세요!' },
+]
 
 export async function assignmentRoutes(app: FastifyInstance) {
-  // 내 과제 목록 (신입: 받은 과제, 사수: 낸 과제)
+  // 내 과제 목록 — 없으면 기본 미션 자동 생성
   app.get('/api/assignments', { preHandler: [app.authenticate] }, async (request) => {
     const { sub } = request.user as { sub: string }
-    const result = await db
+    let result = await db
       .select()
       .from(assignments)
       .where(or(eq(assignments.assignedTo, sub), eq(assignments.createdBy, sub)))
       .orderBy(desc(assignments.createdAt))
+
+    // 과제가 하나도 없으면 기본 미션 생성
+    if (result.length === 0) {
+      for (const m of DEFAULT_MISSIONS) {
+        await db.insert(assignments).values({
+          title: m.title,
+          description: m.description,
+          createdBy: sub,
+          assignedTo: sub,
+          status: 'pending',
+        })
+      }
+      result = await db
+        .select()
+        .from(assignments)
+        .where(eq(assignments.assignedTo, sub))
+        .orderBy(desc(assignments.createdAt))
+    }
+
     return result
+  })
+
+  // 과제 상태 변경 (칸반 드래그&드롭)
+  app.patch<{
+    Params: { id: string }
+    Body: { status: string }
+  }>('/api/assignments/:id/status', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params
+    const { status } = request.body
+    if (!['pending', 'submitted', 'completed'].includes(status)) {
+      return reply.status(400).send({ error: 'status는 pending/submitted/completed만 가능' })
+    }
+    const result = await db
+      .update(assignments)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(assignments.id, id))
+      .returning()
+    if (!result.length) return reply.status(404).send({ error: '과제를 찾을 수 없습니다' })
+    return result[0]
   })
 
   // 과제 등록 (mentor만)

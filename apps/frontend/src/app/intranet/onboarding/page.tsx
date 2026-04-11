@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getAssignments, submitAssignment } from '@/lib/api'
+import { getAssignments, updateAssignmentStatus } from '@/lib/api'
 import IntranetSidebar from '@/components/IntranetSidebar'
 import SpeedActions from '@/components/SpeedActions'
 import { useUser } from '@/hooks/useUser'
-import type { Assignment } from '@/lib/api'
 import { usePageContext } from '@/contexts/PageContext'
 
 interface Mission {
@@ -13,18 +12,7 @@ interface Mission {
   title: string
   description: string
   status: 'todo' | 'in_progress' | 'done'
-  fromAssignment?: boolean
 }
-
-// 기본 온보딩 미션 (사수가 설정하는 구조)
-const DEFAULT_MISSIONS: Omit<Mission, 'id'>[] = [
-  { title: '연차 신청 해보기', description: '"직접 연차 신청을 한번 해보세요. 시스템을 직접 써보는 것이 자율성을 향한 첫 번째 단계입니다!"', status: 'todo' },
-  { title: '사내 메신저 설치 및 인사', description: '"동료들과 소통하는 가장 빠른 방법입니다. 가벼운 인사와 함께 팀 채널에 합류해 보세요."', status: 'todo' },
-  { title: '팀원들과 점심 식사', description: '"업무 외적인 대화를 통해 서로를 더 잘 알아가는 시간을 가져보시길 권장합니다."', status: 'todo' },
-  { title: '비즈니스 이메일 서명 설정', description: '"우리 기업의 아이덴티티를 나타내는 표준 서명을 설정하여 전문성을 갖춰 보세요."', status: 'todo' },
-  { title: '보안 서약서 작성', description: '"중요한 정보 자산을 보호하는 것은 금융인의 기본입니다. 내용을 꼼꼼히 확인하고 서명해 주세요."', status: 'in_progress' },
-  { title: '사원증 등록', description: '"사원증은 Kiwoom 가족의 증표입니다. 분실하지 않도록 유의해주세요!"', status: 'done' },
-]
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: '#B40064', dot: '#B40064' },
@@ -32,19 +20,16 @@ const COLUMNS = [
   { key: 'done', label: 'Done', color: '#10B981', dot: '#10B981' },
 ]
 
-const KANBAN_STORAGE_KEY = 'chat-ki-s:kanban-status'
-
-function loadSavedStatuses(): Record<string, Mission['status']> {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(localStorage.getItem(KANBAN_STORAGE_KEY) || '{}')
-  } catch { return {} }
+function dbStatusToKanban(s: string): Mission['status'] {
+  if (s === 'completed') return 'done'
+  if (s === 'submitted') return 'in_progress'
+  return 'todo'
 }
 
-function saveStatuses(missions: Mission[]) {
-  const map: Record<string, Mission['status']> = {}
-  missions.forEach((m) => { map[m.id] = m.status })
-  localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(map))
+function kanbanToDbStatus(s: Mission['status']): string {
+  if (s === 'done') return 'completed'
+  if (s === 'in_progress') return 'submitted'
+  return 'pending'
 }
 
 export default function OnboardingPage() {
@@ -54,21 +39,15 @@ export default function OnboardingPage() {
   const { setPageContext, clearPageContext } = usePageContext()
 
   useEffect(() => {
-    const saved = loadSavedStatuses()
-    const base = DEFAULT_MISSIONS.map((m, i) => {
-      const id = `default-${i}`
-      return { ...m, id, status: saved[id] || m.status }
-    })
     getAssignments().then((assignments) => {
-      const fromDb = assignments.map((a) => ({
+      const mapped: Mission[] = assignments.map((a) => ({
         id: a.id,
         title: a.title,
         description: a.description || a.title,
-        status: (saved[a.id] || (a.status === 'completed' ? 'done' : a.status === 'submitted' ? 'in_progress' : 'todo')) as Mission['status'],
-        fromAssignment: true,
+        status: dbStatusToKanban(a.status),
       }))
-      setMissions([...base, ...fromDb])
-    }).catch(() => setMissions(base))
+      setMissions(mapped)
+    }).catch(() => {})
   }, [])
 
   // 미션별 챗봇 안내 메시지
@@ -84,14 +63,15 @@ export default function OnboardingPage() {
   function updateMissionStatus(id: string, newStatus: Mission['status']) {
     setMissions((prev) => {
       const updated = prev.map((m) => m.id === id ? { ...m, status: newStatus } : m)
-      saveStatuses(updated)
+
+      // DB에 상태 저장
+      updateAssignmentStatus(id, kanbanToDbStatus(newStatus)).catch(() => {})
 
       // in_progress로 바뀔 때 챗봇 메시지 트리거
       if (newStatus === 'in_progress') {
         const mission = prev.find((m) => m.id === id)
         if (mission) {
           const chatMsg = MISSION_CHAT_MESSAGES[mission.title] || `'${mission.title}' 미션을 시작하셨군요! 도움이 필요하시면 언제든 말씀해주세요.`
-          // FloatingChat에 전달 (storage event)
           localStorage.setItem('chat-ki-s:mission-chat', JSON.stringify({
             title: mission.title,
             message: chatMsg,
@@ -109,10 +89,12 @@ export default function OnboardingPage() {
     setMissions((prev) => {
       const updated = prev.map((m) => {
         if (m.id !== id) return m
-        const next = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
+        const next: Mission['status'] = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
         return { ...m, status: next }
       })
-      saveStatuses(updated)
+      // DB에 상태 저장
+      const mission = updated.find((m) => m.id === id)
+      if (mission) updateAssignmentStatus(id, kanbanToDbStatus(mission.status)).catch(() => {})
       return updated
     })
   }

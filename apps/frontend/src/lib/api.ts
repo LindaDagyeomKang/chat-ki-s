@@ -310,6 +310,10 @@ export async function submitAssignment(id: string, submission: string): Promise<
   return apiFetch(`/api/assignments/${id}/submit`, { method: 'PATCH', body: JSON.stringify({ submission }) })
 }
 
+export async function updateAssignmentStatus(id: string, status: string): Promise<Assignment> {
+  return apiFetch(`/api/assignments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
+}
+
 // Calendar
 export interface CalendarEvent {
   id: string; userId: string; title: string; description: string
