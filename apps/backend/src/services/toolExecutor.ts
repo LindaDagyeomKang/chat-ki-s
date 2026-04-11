@@ -653,6 +653,46 @@ export async function executeTool(
       return { result: `__SEARCH_DOCS__:${args.query}` }
     }
 
+    case 'query_db': {
+      const question = (args.question || '').trim()
+      if (!question) return { result: '질문을 입력해 주세요.' }
+
+      try {
+        const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:8001'
+        // 1. AI 서비스에서 SQL 생성
+        const genRes = await fetch(`${aiUrl}/datahub/query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, user_id: userId }),
+        })
+        const genBody = await genRes.json() as { sql: string; explanation: string; safe: boolean; error?: string }
+
+        if (!genBody.safe || !genBody.sql) {
+          return { result: genBody.error || '이 질문에 대한 SQL을 생성할 수 없습니다.' }
+        }
+
+        // 2. 백엔드에서 SQL 실행
+        const { pool } = await import('../db')
+        const result = await pool.query(genBody.sql)
+        const rows = result.rows.slice(0, 20)
+
+        if (rows.length === 0) {
+          return { result: `${genBody.explanation}\n\n조회 결과가 없습니다.` }
+        }
+
+        // 결과 포맷팅
+        const fields = result.fields.map(f => f.name)
+        const formatted = rows.map((row, i) => {
+          const vals = fields.map(f => `${f}: ${row[f] ?? '-'}`).join(', ')
+          return `${i + 1}. ${vals}`
+        }).join('\n')
+
+        return { result: `${genBody.explanation}\n\n${formatted}` }
+      } catch (err: any) {
+        return { result: `DB 조회 중 오류가 발생했습니다: ${err.message}` }
+      }
+    }
+
     default:
       return { result: `알 수 없는 도구: ${toolName}` }
   }

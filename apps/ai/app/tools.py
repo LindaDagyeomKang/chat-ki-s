@@ -342,6 +342,23 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_db",
+            "description": "다른 도구로 해결할 수 없는 DB 조회 질문에 사용합니다. 자연어 질문을 SQL로 변환하여 실행합니다. 예: '이번 달 경비 총액', '인사이트랩팀 직원 수', '가장 조회수 높은 공지' 등 기존 도구로 커버되지 않는 집계/분석/통계 질문에 활용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "DB에서 조회하고 싶은 내용을 자연어로 설명"
+                    },
+                },
+                "required": ["question"],
+            },
+        },
+    },
 ]
 
 SYSTEM_PROMPT = """\
@@ -365,6 +382,7 @@ SYSTEM_PROMPT = """\
   ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
 - 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)
 - 결재함/보고서 관련 질문 (결재 상태, 보고서 양식, 업무 히스토리) → get_documents 호출
+- 다른 도구로 해결 안 되는 DB 조회/통계/집계 질문 → query_db 호출 (예: "이번 달 경비 총액", "팀별 인원수")
 - 금융 용어/개념 질문 → search_glossary 호출
 - 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)
 - ⚠️ "캘린더에 추가해줘", "일정 등록해줘" = add_calendar_event (submit_leave 아님)

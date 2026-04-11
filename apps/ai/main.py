@@ -10,6 +10,7 @@ from app.routes.search import router as search_router
 from app.routes.agent import router as agent_router
 from app.routes.tools_chat import router as tools_chat_router
 from app.routes.glossary import router as glossary_router
+from app.routes.datahub_query import router as datahub_router
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ app.include_router(search_router)
 app.include_router(agent_router)
 app.include_router(tools_chat_router)
 app.include_router(glossary_router)
+app.include_router(datahub_router)
 
 
 @app.get("/health")
