@@ -161,7 +161,7 @@ export default function IntranetDashboard() {
       <div className="grid grid-cols-2 gap-8">
         {/* 받은 편지함 */}
         <div className="bg-white" style={{ borderRadius: 32, padding: 24, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>받은 편지함</h2>
               <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FDF2F8', color: '#E1007F', fontFamily: 'Manrope', fontWeight: 600 }}>{mails.length}</span>
@@ -172,17 +172,20 @@ export default function IntranetDashboard() {
             {mails.length === 0 ? (
               <p className="text-sm" style={{ color: '#94A3B8' }}>새 메일이 없습니다</p>
             ) : (
-              mails.slice(0, 4).map((m) => (
-                <Link key={m.id} href="/intranet/mails" className="flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg px-2 transition-colors">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: !m.isRead ? '#E1007F' : 'transparent' }} />
-                    <span className="text-xs font-medium truncate" style={{ color: '#111547' }}>{m.subject}</span>
-                  </div>
-                  <span className="flex-shrink-0 ml-2" style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'Manrope' }}>
-                    {new Date(m.receivedAt || m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                  </span>
-                </Link>
-              ))
+              mails.slice(0, 3).map((m) => {
+                const senderName = m.fromText?.match(/^([가-힣]+)/)?.[1] || '알 수 없음'
+                return (
+                  <Link key={m.id} href="/intranet/mails" className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {!m.isRead && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#E1007F' }} />}
+                        <span className="text-xs font-medium truncate" style={{ color: '#111547' }}>{m.subject}</span>
+                      </div>
+                      <p style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'Manrope' }}>{senderName} · {new Date(m.receivedAt || m.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                    </div>
+                  </Link>
+                )
+              })
             )}
           </div>
         </div>
