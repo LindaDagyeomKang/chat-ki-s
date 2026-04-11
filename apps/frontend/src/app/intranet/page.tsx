@@ -191,7 +191,7 @@ export default function IntranetDashboard() {
               {mails.length === 0 ? (
                 <p className="text-sm" style={{ color: '#94A3B8' }}>새 메일이 없습니다</p>
               ) : (
-                mails.slice(0, 3).map((m) => (
+                mails.slice(0, 5).map((m) => (
                   <div key={m.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: !m.isRead ? '#E1007F' : '#3B82F6' }} />
@@ -215,7 +215,7 @@ export default function IntranetDashboard() {
           </div>
           <div className="space-y-2">
             {documents.length > 0 ? (
-              documents.slice(0, 4).map((d) => (
+              documents.slice(0, 3).map((d) => (
                 <Link key={d.id} href={`/intranet/documents?id=${d.id}`} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium mb-1 truncate" style={{ color: '#111547' }}>{d.title}</p>
