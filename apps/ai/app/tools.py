@@ -324,7 +324,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_documents",
-            "description": "결재함에서 보고서/기안 문서를 조회합니다. 업무 결재 상태 확인, 보고서 내용 검색, 보고서 양식 참고 등에 사용합니다. '결재 어디까지 됐어?', 'AB테스트 보고서 찾아줘', '보고서 양식 초안 잡아줘' 같은 요청에 사용하세요.",
+            "description": "결재함에서 보고서/기안 문서를 조회합니다. 업무 결재 상태 확인, 보고서 내용 검색, 보고서 양식 참고 등에 사용합니다. '미결재 문서', '승인된 보고서', 'AB테스트 보고서 찾아줘' 같은 요청에 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -332,6 +332,11 @@ TOOLS = [
                         "type": "string",
                         "enum": ["AB테스트", "KPI", "알고리즘", "고객분석", "콘텐츠", "주간동향"],
                         "description": "보고서 카테고리로 필터 (선택)"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["draft", "submitted", "approved", "rejected"],
+                        "description": "결재 상태 필터: draft=임시저장, submitted=미결재/제출됨, approved=승인완료, rejected=반려 (선택)"
                     },
                     "keyword": {
                         "type": "string",

@@ -192,8 +192,10 @@ export async function executeTool(
     case 'get_documents': {
       const cat = (args.category || '').trim()
       const kw = (args.keyword || '').trim()
+      const statusFilter = (args.status || '').trim()
       let q = db.select().from(documents).orderBy(desc(documents.submittedAt)).limit(10)
       if (cat) q = q.where(eq(documents.category, cat)) as typeof q
+      if (statusFilter) q = q.where(eq(documents.status, statusFilter)) as typeof q
       if (kw) q = q.where(or(ilike(documents.title, `%${kw}%`), ilike(documents.content, `%${kw}%`), ilike(documents.author, `%${kw}%`))) as typeof q
       const rows = await q
       if (rows.length === 0) return { result: '해당하는 보고서/기안 문서가 없습니다.' }
