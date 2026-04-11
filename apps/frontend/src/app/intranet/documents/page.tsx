@@ -46,7 +46,7 @@ export default function DocumentsPage() {
   return (
     <div className="flex flex-1 min-h-0">
       {/* 목록 */}
-      <div className={`${selectedDoc ? 'w-[440px]' : 'flex-1 max-w-3xl mx-auto'} flex flex-col border-r border-gray-100 bg-white`}>
+      <div className={`${selectedDoc ? 'w-[440px]' : 'flex-1'} flex flex-col border-r border-gray-100 bg-white`}>
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-4">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 1h8l5 5v11a2 2 0 01-2 2H4a2 2 0 01-2-2V3a2 2 0 012-2z" stroke="#111547" strokeWidth="1.5" fill="none"/><path d="M12 1v5h5M7 10h6M7 13h4" stroke="#111547" strokeWidth="1.5" strokeLinecap="round"/></svg>
