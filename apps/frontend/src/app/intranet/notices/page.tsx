@@ -153,7 +153,7 @@ export default function NoticesPage() {
         {/* 피처드 카드 + 인기글 */}
         <div className="flex gap-6">
           {/* 피처드 카드 (좌측, 네이비) */}
-          <div className="flex-1 p-8 flex flex-col justify-between relative overflow-hidden" style={{ borderRadius: 32, background: 'linear-gradient(169deg, #111547 0%, #1A237E 100%)', minHeight: 260 }}>
+          <div className="flex-1 p-6 flex flex-col justify-between relative overflow-hidden" style={{ borderRadius: 32, background: 'linear-gradient(169deg, #111547 0%, #1A237E 100%)', minHeight: 160 }}>
             <div>
               <span className="inline-block text-[10px] font-medium px-3 py-1 rounded-full mb-4" style={{ background: '#E1007F', color: '#FFF' }}>게시판 안내</span>
               <h2 className="text-xl font-medium text-white mb-2 leading-snug" style={{ maxWidth: '60%' }}>궁금한 점이 있다면? AI 챗봇 키링에게 물어보세요</h2>
