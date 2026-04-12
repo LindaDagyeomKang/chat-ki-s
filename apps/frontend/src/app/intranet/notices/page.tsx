@@ -62,7 +62,7 @@ export default function NoticesPage() {
           </nav>
         </IntranetSidebar>
         <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-4xl">
+          <div className="w-full">
             <button onClick={() => setSelected(null)} className="flex items-center gap-1 text-sm mb-6 hover:underline" style={{ color: '#E1007F' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               목록으로
@@ -176,7 +176,7 @@ export default function NoticesPage() {
                 <h3 style={{ color: '#B40064', fontSize: 14, fontWeight: 500 }}>실시간 인기글</h3>
               </div>
               <div className="space-y-3">
-                {(notices.length > 0 ? [...notices].sort((a, b) => ((b as any).views ?? 0) - ((a as any).views ?? 0)).slice(0, 5).map(n => n.title) : POPULAR_FALLBACK).map((title, i) => (
+                {(notices.length > 0 ? [...notices].sort((a, b) => ((b as any).views ?? 0) - ((a as any).views ?? 0)).slice(0, Math.min(notices.length, 5)).map(n => n.title) : POPULAR_FALLBACK).map((title, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <span className="w-4" style={{ color: '#CBD5E1', fontSize: 12, fontFamily: 'Manrope', fontWeight: 700 }}>{i + 1}</span>
                     <span style={{ color: '#111547', fontSize: 12, fontWeight: 500, lineHeight: '16px' }} className="truncate">{title}</span>
