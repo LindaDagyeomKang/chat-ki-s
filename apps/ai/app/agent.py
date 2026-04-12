@@ -314,7 +314,10 @@ async def detect_action(message: str, history: list[dict] | None = None) -> Agen
     """LLM을 사용하여 사용자 메시지에서 의도를 판별합니다."""
     client = AsyncOpenAI(api_key=settings.openai_api_key)
 
-    llm_messages: list[dict] = [{"role": "system", "content": INTENT_SYSTEM_PROMPT}]
+    from datetime import datetime, timezone, timedelta
+    now = datetime.now(timezone(timedelta(hours=9)))
+    date_info = f"오늘 날짜: {now.strftime('%Y-%m-%d (%A)')}\n\n"
+    llm_messages: list[dict] = [{"role": "system", "content": date_info + INTENT_SYSTEM_PROMPT}]
     if history:
         for h in history[-8:]:
             role = h.get("role", "user")

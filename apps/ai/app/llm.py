@@ -1,6 +1,9 @@
 import logging
+from datetime import datetime, timezone, timedelta
 from openai import AsyncOpenAI
 from .config import settings
+
+KST = timezone(timedelta(hours=9))
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +141,10 @@ async def call_llm(question: str, hits: list[dict], history: list[dict] | None =
     client = _get_client()
     user_msg = _build_user_message(question, hits)
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    today = datetime.now(KST).strftime("%Y-%m-%d (%A)")
+    system_with_date = f"오늘 날짜: {today}\n\n{SYSTEM_PROMPT}"
+
+    messages = [{"role": "system", "content": system_with_date}]
     if history:
         messages.extend(_build_history_messages(history))
     messages.append({"role": "user", "content": user_msg})
@@ -180,7 +186,10 @@ async def stream_llm(question: str, hits: list[dict], history: list[dict] | None
     client = _get_client()
     user_msg = _build_user_message(question, hits)
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    today = datetime.now(KST).strftime("%Y-%m-%d (%A)")
+    system_with_date = f"오늘 날짜: {today}\n\n{SYSTEM_PROMPT}"
+
+    messages = [{"role": "system", "content": system_with_date}]
     if history:
         messages.extend(_build_history_messages(history))
     messages.append({"role": "user", "content": user_msg})
