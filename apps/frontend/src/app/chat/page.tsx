@@ -247,27 +247,29 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F8FAFC' }}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center max-w-2xl mx-auto gap-8">
-              {/* 타이틀 + 환영 인사 */}
-              <div>
-                <img src="/images/image 4.png" alt="" className="w-20 h-20 mb-4 mx-auto" />
-                <h2 className="text-xl font-bold mb-2" style={{ color: '#111547' }}>
-                  키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
-                </h2>
-                <p className="text-sm" style={{ color: '#94A3B8' }}>
-                  안녕하세요! 궁금한 점을 물어보시면 빠르게 안내해 드리겠습니다.
-                </p>
-              </div>
-
-              {/* CTA + FAQ 가로 배치 */}
-              <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-col h-full">
+              {/* 상단: 타이틀 + 환영 인사 + CTA (중앙) */}
+              <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+                <div>
+                  <img src="/images/image 4.png" alt="" className="w-20 h-20 mb-4 mx-auto" />
+                  <h2 className="text-xl font-bold mb-2" style={{ color: '#111547' }}>
+                    키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
+                  </h2>
+                  <p className="text-sm" style={{ color: '#94A3B8' }}>
+                    안녕하세요! 궁금한 점을 물어보시면 빠르게 안내해 드리겠습니다.
+                  </p>
+                </div>
                 <button
                   onClick={() => handleSend('챗키스 활용 방법', 'rag')}
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors hover:bg-pink-50"
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-colors hover:bg-pink-50"
                   style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
                 >
                   📋 챗키스 활용 가이드
                 </button>
+              </div>
+
+              {/* 하단: FAQ 빠른 질문 (입력란 바로 위) */}
+              <div className="flex flex-wrap gap-2 justify-end px-4 pb-3 max-w-3xl mx-auto w-full">
                 {[
                   '인사팀 담당자가 누구예요?',
                   '연차 신청 어떻게 해요?',
@@ -276,7 +278,7 @@ export default function ChatPage() {
                   <button
                     key={q}
                     onClick={() => handleSend(q, 'rag')}
-                    className="px-5 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-gray-50"
+                    className="px-4 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-gray-50"
                     style={{ border: '1px solid #E2E8F0', background: '#FFF', color: '#111547' }}
                   >
                     {q}
