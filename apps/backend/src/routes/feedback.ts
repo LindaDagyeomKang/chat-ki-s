@@ -3,6 +3,8 @@ import { eq, and, desc } from 'drizzle-orm'
 import { db } from '../db'
 import { feedback, messages, goodAnswers } from '../db/schema'
 
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL ?? 'http://localhost:8001'
+
 export async function feedbackRoutes(app: FastifyInstance) {
   app.post<{
     Body: { messageId?: string; rating?: string; comment?: string }
@@ -57,6 +59,20 @@ export async function feedbackRoutes(app: FastifyInstance) {
                 question: questionMsg.content,
                 answer: answerMsg.content,
               })
+
+              // ChromaDB에 질문+답변을 벡터화하여 RAG 지식 베이스 보강
+              try {
+                const goodAnswerDoc = `[좋은 답변 예시]\n질문: ${questionMsg.content}\n답변: ${answerMsg.content}`
+                const blob = new Blob([goodAnswerDoc], { type: 'text/plain' })
+                const formData = new FormData()
+                formData.append('file', blob, `good_answer_${Date.now()}.txt`)
+                await fetch(`${AI_SERVICE_URL}/documents/ingest`, {
+                  method: 'POST',
+                  body: formData,
+                })
+              } catch {
+                // 벡터화 실패해도 피드백 자체는 성공 처리
+              }
             }
           }
         } catch (e) {
