@@ -35,7 +35,7 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(defaultOpen)
-  const [size, setSize] = useState({ w: 320, h: 484 })
+  const [size, setSize] = useState({ w: 380, h: 580 })
   const [pos, setPos] = useState({ x: -1, y: -1 }) // -1 = 기본 위치 (right:24, bottom:24)
   const resizing = useRef(false)
   const dragging = useRef(false)
@@ -308,8 +308,8 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
               📋 챗키스 활용 가이드
             </button>
 
-            {/* FAQ 빠른 질문 */}
-            <div className="flex flex-col gap-2">
+            {/* FAQ 빠른 질문 (오른쪽 정렬) */}
+            <div className="flex flex-col gap-2 items-end">
               {[
                 '인사팀 담당자가 누구예요?',
                 '연차 신청 어떻게 해요?',
@@ -318,7 +318,7 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
                 <button
                   key={q}
                   onClick={() => handleSend(q, 'rag')}
-                  className="w-full text-left px-4 py-3 rounded-xl text-[12px] font-medium transition-colors hover:bg-gray-50"
+                  className="px-4 py-3 rounded-xl text-[12px] font-medium transition-colors hover:bg-gray-50"
                   style={{ border: '1px solid #E2E8F0', background: '#FFF', color: '#111547' }}
                 >
                   {q}
@@ -419,6 +419,9 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
             </svg>
           </button>
         </div>
+        <p className="text-center mt-2" style={{ fontSize: 10, color: '#94A3B8' }}>
+          AI는 한정된 데이터에 기반하니, 중요한 정보는 추가 확인을 권장해요.
+        </p>
       </div>
     </div>
   )
