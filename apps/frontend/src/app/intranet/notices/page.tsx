@@ -87,7 +87,7 @@ export default function NoticesPage() {
   }
 
   return (
-    <div className="flex flex-1 min-h-0 h-full overflow-hidden">
+    <div className="flex flex-1 min-h-0">
     <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole}>
       {/* 게시판 탭 네비 */}
       <nav className="py-4 px-4 space-y-1">
@@ -121,7 +121,7 @@ export default function NoticesPage() {
     </IntranetSidebar>
 
     {/* 메인 콘텐츠 */}
-    <main className="p-8 flex flex-col gap-8" style={{ height: 'calc(100vh - 64px)', overflowY: 'auto' }}>
+    <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
         {/* 헤더 */}
         <div className="flex items-start justify-between">
           <div>
