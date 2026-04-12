@@ -10,7 +10,7 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-// Token management
+// Token management (HttpOnly 쿠키 기반 — localStorage는 폴백용으로만 유지)
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('accessToken')
@@ -39,23 +39,17 @@ export function setBotNickname(name: string): void {
 
 // User info
 export async function getMe(): Promise<{ id: string; employeeId: string; name: string; email: string; department: string; role: string }> {
-  return apiFetch('/api/me')
+  return apiFetch('/api/users/me')
 }
 
-// Auto login (백그라운드에서 기본 계정으로 자동 인증)
+// 인증 확인 (HttpOnly 쿠키 또는 localStorage 토큰으로 검증)
 export async function ensureAuth(): Promise<void> {
-  const token = getToken()
-  if (token) {
-    // 토큰 유효성 확인
-    try {
-      await apiFetch('/api/me')
-      return
-    } catch {
-      clearToken()
-    }
+  try {
+    await apiFetch('/api/users/me')
+  } catch {
+    clearToken()
+    throw new Error('Unauthorized')
   }
-  // 자동 로그인
-  await login({ employeeId: '20260001', password: 'jhc0001' })
 }
 
 // Base fetch with auth header
@@ -70,7 +64,7 @@ async function apiFetch<T>(
     ...options.headers,
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers })
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers, credentials: 'include' })
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
@@ -91,6 +85,9 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
 }
 
 export async function logout(): Promise<void> {
+  try {
+    await apiFetch('/api/auth/logout', { method: 'POST' })
+  } catch {}
   clearToken()
 }
 

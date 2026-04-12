@@ -5,9 +5,9 @@ import { users, employees } from '../db/schema'
 import { sql } from 'drizzle-orm'
 
 export async function chatRoutes(app: FastifyInstance) {
-  // GET /api/me — portal session check
+  // GET /api/users/me — portal session check
   app.get(
-    '/api/me',
+    '/api/users/me',
     { onRequest: [app.authenticate] },
     async (request, reply) => {
       const payload = request.user as { sub: string; employeeId: string }
@@ -35,8 +35,8 @@ export async function chatRoutes(app: FastifyInstance) {
     }
   )
 
-  // GET /api/me/profile — 프로필 상태/담당업무 조회
-  app.get('/api/me/profile', { onRequest: [app.authenticate] }, async (request, reply) => {
+  // GET /api/users/me/profile — 프로필 상태/담당업무 조회
+  app.get('/api/users/me/profile', { onRequest: [app.authenticate] }, async (request, reply) => {
     const payload = request.user as { sub: string }
     const user = (await db.select().from(users).where(eq(users.id, payload.sub)).limit(1))[0]
     if (!user) return reply.status(404).send({ error: 'User not found' })
@@ -52,8 +52,8 @@ export async function chatRoutes(app: FastifyInstance) {
     })
   })
 
-  // PATCH /api/me/profile — 프로필 상태/담당업무 업데이트
-  app.patch<{ Body: { status?: string; duty?: string } }>('/api/me/profile', {
+  // PATCH /api/users/me/profile — 프로필 상태/담당업무 업데이트
+  app.patch<{ Body: { status?: string; duty?: string } }>('/api/users/me/profile', {
     onRequest: [app.authenticate],
     schema: {
       body: {

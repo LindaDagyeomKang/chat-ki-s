@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "@chat-ki-s/shared": "*",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^8.0.0",
     "@fastify/jwt": "^8.0.0",
     "@fastify/multipart": "^8.0.0",
     "@fastify/websocket": "^8.0.0",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.1",
     "dotenv-cli": "^11.0.0",
     "drizzle-orm": "^0.36.4",
@@ -27,6 +29,7 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.0.0",

@@ -28,8 +28,9 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
     async function load() {
       try {
         const token = localStorage.getItem('accessToken')
-        const res = await fetch(`${API_URL}/api/me/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch(`${API_URL}/api/users/me/profile`, {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          credentials: 'include',
         })
         if (res.ok) {
           const data = await res.json()
@@ -44,10 +45,11 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
   async function saveField(field: 'status' | 'duty', value: string) {
     try {
       const token = localStorage.getItem('accessToken')
-      await fetch(`${API_URL}/api/me/profile`, {
+      await fetch(`${API_URL}/api/users/me/profile`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ [field]: value }),
+        credentials: 'include',
       })
     } catch {}
   }

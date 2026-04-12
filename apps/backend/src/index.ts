@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt'
 import fastifyCors from '@fastify/cors'
 import fastifyWebsocket from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
+import fastifyCookie from '@fastify/cookie'
 import { authRoutes } from './routes/auth'
 import { userRoutes } from './routes/users'
 import { chatRoutes } from './routes/chat'
@@ -25,8 +26,15 @@ import { runMigrations } from './db/migrate'
 
 const app = Fastify({ logger: true })
 
-// CORS
-app.register(fastifyCors, { origin: true })
+// CORS — 환경변수 CORS_ORIGIN으로 허용 도메인 설정 (쉼표 구분)
+// 예: CORS_ORIGIN=http://localhost:3000,https://portal.kiwoom.com
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : (process.env.NODE_ENV === 'production' ? false : true)
+app.register(fastifyCors, { origin: corsOrigin, credentials: true })
+
+// Cookie plugin (HttpOnly 토큰 저장)
+app.register(fastifyCookie)
 
 // JWT plugin
 app.register(fastifyJwt, {
@@ -39,12 +47,17 @@ app.register(fastifyWebsocket)
 // Multipart (file uploads for RAG document ingestion)
 app.register(fastifyMultipart)
 
-// Authenticate decorator used by protected routes
+// Authenticate decorator — HttpOnly 쿠키 또는 Authorization 헤더에서 토큰 읽기
 app.decorate('authenticate', async function (request, reply) {
   try {
+    // 쿠키에 토큰이 있으면 Authorization 헤더로 주입
+    const cookieToken = request.cookies?.accessToken
+    if (cookieToken && !request.headers.authorization) {
+      request.headers.authorization = `Bearer ${cookieToken}`
+    }
     await request.jwtVerify()
   } catch (err) {
-    reply.send(err)
+    reply.status(401).send({ error: 'Unauthorized' })
   }
 })
 
