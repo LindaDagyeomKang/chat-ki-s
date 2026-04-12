@@ -132,11 +132,12 @@ export default function Message({ message, onFeedback, feedbackGiven, saved, onS
         </span>
 
         {hasSources && (
-          <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs">
-            <p className="text-gray-500 font-medium mb-1">출처</p>
-            <ul className="flex flex-col gap-1">
-              {message.sources!.map((src, i) => (
-                <li key={i} className="text-gray-600">
+          <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-xs">
+            {message.sources!.map((src, i) => (
+              <div key={i} className="flex items-center gap-2 text-gray-600">
+                <span className="text-gray-400">📄</span>
+                <span>
+                  <span className="text-gray-500 font-medium">출처: </span>
                   {src.url ? (
                     <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                       {src.title}
@@ -144,10 +145,9 @@ export default function Message({ message, onFeedback, feedbackGiven, saved, onS
                   ) : (
                     <span className="font-medium">{src.title}</span>
                   )}
-                  {src.excerpt && <span className="text-gray-400 ml-1">— {src.excerpt}</span>}
-                </li>
-              ))}
-            </ul>
+                </span>
+              </div>
+            ))}
           </div>
         )}
 

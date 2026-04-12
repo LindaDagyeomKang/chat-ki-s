@@ -162,7 +162,12 @@ async def call_llm(question: str, hits: list[dict], history: list[dict] | None =
     answer = choice.message.content or ""
 
     # 답변 적절성 검증 (프롬프트 체이닝)
-    is_valid = await _validate_answer(question, hits, answer)
+    # 유사도 높은 문서가 있으면 검증 건너뛰기 (이미 신뢰할 수 있는 소스)
+    top_score = max((h.get("score", 0) for h in hits), default=0)
+    if top_score >= settings.score_threshold_high:
+        is_valid = True
+    else:
+        is_valid = await _validate_answer(question, hits, answer)
     if not is_valid:
         logger.warning("answer rejected by validation: q=%s", question[:50])
         answer = (
