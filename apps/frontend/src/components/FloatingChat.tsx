@@ -291,9 +291,11 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
             {/* 추천 질문 버튼 */}
             <div className="flex flex-wrap gap-2 mb-4 pt-2">
               {[
+                '챗키스 활용 방법',
                 '오늘 일정 확인',
-                '미결재 문서 보기',
                 '회의실 예약 현황',
+                '연차 잔여일수 확인',
+                '법인카드 사용 기준',
               ].map((q) => (
                 <button
                   key={q}
