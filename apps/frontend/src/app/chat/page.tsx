@@ -247,7 +247,7 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F8FAFC' }}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto gap-6">
+            <div className="flex flex-col items-center justify-center h-full text-center max-w-2xl mx-auto gap-8">
               {/* 타이틀 + 환영 인사 */}
               <div>
                 <img src="/images/image 4.png" alt="" className="w-20 h-20 mb-4 mx-auto" />
@@ -259,17 +259,15 @@ export default function ChatPage() {
                 </p>
               </div>
 
-              {/* CTA 버튼 */}
-              <button
-                onClick={() => handleSend('챗키스 활용 방법', 'rag')}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-colors hover:bg-pink-50"
-                style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
-              >
-                📋 챗키스 활용 가이드
-              </button>
-
-              {/* FAQ 빠른 질문 (오른쪽 정렬) */}
-              <div className="flex flex-col gap-2 items-end w-full">
+              {/* CTA + FAQ 가로 배치 */}
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={() => handleSend('챗키스 활용 방법', 'rag')}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors hover:bg-pink-50"
+                  style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
+                >
+                  📋 챗키스 활용 가이드
+                </button>
                 {[
                   '인사팀 담당자가 누구예요?',
                   '연차 신청 어떻게 해요?',
