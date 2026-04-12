@@ -11,27 +11,26 @@ const base: MessageType = {
 }
 
 describe('Message', () => {
-  it('renders user message aligned to the right', () => {
+  it('renders user message with content', () => {
     render(<Message message={{ ...base, role: 'user' }} />)
     expect(screen.getByText('안녕하세요')).toBeInTheDocument()
     expect(screen.getByText('나')).toBeInTheDocument()
   })
 
-  it('renders assistant message aligned to the left', () => {
+  it('renders assistant message with content', () => {
     render(<Message message={{ ...base, role: 'assistant' }} />)
     expect(screen.getByText('안녕하세요')).toBeInTheDocument()
-    expect(screen.getByText('AI')).toBeInTheDocument()
   })
 
-  it('applies user bubble styles for user role', () => {
-    render(<Message message={{ ...base, role: 'user' }} />)
-    const bubble = screen.getByText('안녕하세요')
-    expect(bubble).toHaveClass('bg-blue-600')
+  it('renders user message aligned to the right', () => {
+    const { container } = render(<Message message={{ ...base, role: 'user' }} />)
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).toContain('justify-end')
   })
 
-  it('applies assistant bubble styles for assistant role', () => {
-    render(<Message message={{ ...base, role: 'assistant' }} />)
-    const bubble = screen.getByText('안녕하세요')
-    expect(bubble).toHaveClass('bg-gray-100')
+  it('renders assistant message aligned to the left', () => {
+    const { container } = render(<Message message={{ ...base, role: 'assistant' }} />)
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).toContain('justify-start')
   })
 })

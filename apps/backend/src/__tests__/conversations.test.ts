@@ -109,8 +109,8 @@ describe('GET /api/conversations', () => {
   })
 
   it('returns list of user conversations', async () => {
-    // select().from().where() chain returns array
-    db.where.mockResolvedValueOnce([TEST_CONV])
+    // select().from().where().orderBy() chain returns array
+    db.orderBy.mockResolvedValueOnce([TEST_CONV])
 
     const res = await app.inject({
       method: 'GET',

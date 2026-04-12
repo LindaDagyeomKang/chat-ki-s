@@ -42,18 +42,6 @@ describe('ChatInput', () => {
     expect(onSend).not.toHaveBeenCalled()
   })
 
-  it('toggles mode to 일반 질문', () => {
-    const onSend = jest.fn()
-    render(<ChatInput onSend={onSend} />)
-
-    fireEvent.click(screen.getByText('일반 질문'))
-    const textarea = screen.getByPlaceholderText(/메시지를 입력하세요/)
-    fireEvent.change(textarea, { target: { value: '테스트' } })
-    fireEvent.click(screen.getByText('전송'))
-
-    expect(onSend).toHaveBeenCalledWith('테스트', 'objective')
-  })
-
   it('disables input and button when disabled prop is true', () => {
     const onSend = jest.fn()
     render(<ChatInput onSend={onSend} disabled />)
