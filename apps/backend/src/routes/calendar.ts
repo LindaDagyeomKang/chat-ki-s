@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { calendarEvents } from '../db/schema'
-import { and, eq, gte, lte, asc, desc } from 'drizzle-orm'
+import { and, eq, gte, lte, asc } from 'drizzle-orm'
 
 export async function calendarRoutes(app: FastifyInstance) {
   // 주간 일정 조회

@@ -1,8 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { meetingRooms, roomReservations, users } from '../db/schema'
-import { and, eq, asc, desc } from 'drizzle-orm'
-import { sql } from 'drizzle-orm'
+import { and, eq, asc } from 'drizzle-orm'
 
 export async function roomRoutes(app: FastifyInstance) {
   // 회의실 목록

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { leaveRequests } from '../db/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 export async function leaveRoutes(app: FastifyInstance) {
   // 내 연차 목록 조회

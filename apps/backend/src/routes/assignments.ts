@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { assignments, users, mails } from '../db/schema'
-import { desc, eq, or, and } from 'drizzle-orm'
+import { desc, eq, or } from 'drizzle-orm'
 
 const DEFAULT_MISSIONS = [
   { title: '연차 신청 해보기', description: '직접 연차 신청을 한번 해보세요. 시스템을 직접 써보는 것이 자율성을 향한 첫 번째 단계입니다!' },

@@ -5,7 +5,7 @@ import { desc, eq, sql } from 'drizzle-orm'
 
 export async function noticeRoutes(app: FastifyInstance) {
   // 공지 목록 조회
-  app.get('/api/notices', { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.get('/api/notices', { preHandler: [app.authenticate] }, async (_request, _reply) => {
     const result = await db
       .select()
       .from(notices)

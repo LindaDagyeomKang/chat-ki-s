@@ -5,7 +5,7 @@ import { eq, ilike, or, desc } from 'drizzle-orm'
 
 export async function documentRoutes(app: FastifyInstance) {
   // 결재함 목록 조회
-  app.get('/api/documents', async (req, reply) => {
+  app.get('/api/documents', async (req, _reply) => {
     const { category, q } = req.query as { category?: string; q?: string }
     let query = db.select().from(documents).orderBy(desc(documents.submittedAt))
 

@@ -150,7 +150,7 @@ export async function agentExecuteRoutes(app: FastifyInstance) {
     }
 
     if (action === 'start_survey') {
-      const quarter = (params.quarter as number) ?? 0
+      const _quarter = (params.quarter as number) ?? 0
       // 설문 시작을 챗봇 메시지로 트리거
       await logExecution('success')
       return {

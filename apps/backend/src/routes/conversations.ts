@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { SocketStream } from '@fastify/websocket'
 import { eq, asc } from 'drizzle-orm'
 import { db } from '../db'
-import { conversations, messages, surveyResponses, surveyQuestions, users as usersTable, mails } from '../db/schema'
+import { conversations, messages, surveyResponses, surveyQuestions, users as usersTable } from '../db/schema'
 import type { Conversation, Message, SendMessageRequest, SendMessageResponse } from '@chat-ki-s/shared'
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL ?? 'http://localhost:8001'
@@ -170,7 +170,7 @@ export async function conversationRoutes(app: FastifyInstance) {
     // Function Calling 방식: LLM이 도구 선택 → 실행 → 결과 → 최종 답변
     let assistantContent = ''
     let agentAction: { action: string; params: Record<string, unknown>; confirmationMessage: string } | undefined
-    let suggestedQuestions: string[] = []
+    const suggestedQuestions: string[] = []
 
     try {
       const { executeTool } = require('../services/toolExecutor')
@@ -196,7 +196,7 @@ export async function conversationRoutes(app: FastifyInstance) {
 
       const messageWithContext = surveyContext ? `${surveyContext}\n\n${content}` : content
 
-      let toolsRes = await fetch(`${AI_SERVICE_URL}/chat/tools`, {
+      const toolsRes = await fetch(`${AI_SERVICE_URL}/chat/tools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageWithContext, history: agentHistory, pageContext: pageContext || undefined }),

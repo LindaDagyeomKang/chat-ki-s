@@ -1,14 +1,14 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { employees, users } from '../db/schema'
-import { eq, ilike, or, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 // 임원 직급
 const EXECUTIVE_RANKS = ['사장', '부사장', '전무', '상무', '이사']
 
 // 민감정보 제거 (전체 공통)
 function removeSensitive(emp: any) {
-  const { birthDate, mbti, gender, ...safe } = emp
+  const { birthDate: _birthDate, mbti: _mbti, gender: _gender, ...safe } = emp
   return safe
 }
 

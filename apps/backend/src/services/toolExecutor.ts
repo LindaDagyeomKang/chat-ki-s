@@ -45,7 +45,7 @@ export async function executeTool(
       const sender = args.sender || ''
       const keyword = args.keyword || ''
 
-      let query = db.select().from(mails).where(eq(mails.toId, userId))
+      const _query = db.select().from(mails).where(eq(mails.toId, userId))
 
       const conditions: any[] = [eq(mails.toId, userId)]
 
@@ -700,7 +700,7 @@ export async function executeTool(
   }
 }
 
-function formatEmployeeResults(rows: any[], ctx: ToolContext): string {
+function formatEmployeeResults(rows: any[], _ctx: ToolContext): string {
   return rows.slice(0, 5).map((e, i) => {
     if (EXEC_RANKS.includes(e.rank)) {
       return `${i + 1}. ${e.name} ${e.rank}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ※ 임원 연락은 비서실(내선 1000)을 통해 문의해 주세요.`

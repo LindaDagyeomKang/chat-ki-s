@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
 import { mails, users } from '../db/schema'
-import { and, desc, eq, ne, or } from 'drizzle-orm'
+import { and, desc, eq, or } from 'drizzle-orm'
 
 export async function mailRoutes(app: FastifyInstance) {
   // 받은 편지함 (삭제 안 된 것만)
