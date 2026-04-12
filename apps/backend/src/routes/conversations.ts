@@ -171,6 +171,7 @@ export async function conversationRoutes(app: FastifyInstance) {
     let assistantContent = ''
     let agentAction: { action: string; params: Record<string, unknown>; confirmationMessage: string } | undefined
     const suggestedQuestions: string[] = []
+    const ragSources: { title: string; url?: string; excerpt?: string }[] = []
 
     try {
       const { executeTool } = require('../services/toolExecutor')
@@ -227,14 +228,21 @@ export async function conversationRoutes(app: FastifyInstance) {
             })
             if (ragRes.ok) {
               const ragBody = await ragRes.json() as any
-              // 출처 정보를 답변에 포함
               let ragContent = ragBody.answer || '관련 문서를 찾지 못했습니다.'
+              // 출처 정보를 텍스트에 포함 + sources 배열에 저장
               if (ragBody.sources?.length > 0) {
                 const sourceNames = ragBody.sources
                   .map((s: any) => s.source?.replace('.md', '').replace(/_/g, ' '))
                   .filter((s: any, i: number, arr: any[]) => s && arr.indexOf(s) === i)
                 if (sourceNames.length > 0) {
                   ragContent += `\n📄 출처: ${sourceNames.join(', ')}`
+                }
+                // 프론트 출처 카드용 데이터 저장
+                for (const s of ragBody.sources) {
+                  const title = s.source?.replace('.md', '').replace(/_/g, ' ') || ''
+                  if (title && !ragSources.find(rs => rs.title === title)) {
+                    ragSources.push({ title })
+                  }
                 }
               }
               toolResults.push({
@@ -374,6 +382,7 @@ export async function conversationRoutes(app: FastifyInstance) {
         createdAt: asstMessage.createdAt,
         ...(agentAction ? { agentAction: { action: agentAction.action, params: agentAction.params, confirmationMessage: agentAction.confirmationMessage } } : {}),
         ...(suggestedQuestions.length ? { suggestedQuestions } : {}),
+        ...(ragSources.length ? { sources: ragSources } : {}),
       },
     }
 
