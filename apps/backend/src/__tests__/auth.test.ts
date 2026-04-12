@@ -1,6 +1,5 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import fastifyJwt from '@fastify/jwt'
-import fastifyCookie from '@fastify/cookie'
 import { authRoutes } from '../routes/auth'
 import { chatRoutes } from '../routes/chat'
 
@@ -41,7 +40,9 @@ function buildApp(): FastifyInstance {
     }
   })
 
-  app.register(fastifyCookie)
+  // setCookie/clearCookie mock (cookie 플러그인 없이 auth 테스트 가능하도록)
+  app.decorateReply('setCookie', function () { return this })
+  app.decorateReply('clearCookie', function () { return this })
   app.register(authRoutes)
   app.register(chatRoutes)
 
