@@ -189,7 +189,7 @@ export default function NoticesPage() {
         </div>
 
         {/* 게시글 테이블 */}
-        <div className="bg-white overflow-hidden" style={{ borderRadius: 32, border: '1px solid #F1F5F9', boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }}>
+        <div className="bg-white flex-1 overflow-y-auto" style={{ borderRadius: 32, border: '1px solid #F1F5F9', boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }}>
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
