@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
 export async function runMigrations(): Promise<void> {
@@ -36,6 +36,43 @@ export async function runMigrations(): Promise<void> {
       const seedSql = readFileSync(seedPath, 'utf-8')
       await pool.query(seedSql)
       console.log('Seed data loaded from seed.sql')
+    }
+    // Glossary 자동 적재 (테이블 없으면 생성 + CSV 데이터 적재)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS glossary (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        term VARCHAR(200) NOT NULL,
+        description TEXT NOT NULL
+      )
+    `)
+    const { rows: glossaryCount } = await pool.query('SELECT COUNT(*) as cnt FROM glossary')
+    if (parseInt(glossaryCount[0].cnt) === 0) {
+      const csvPath = join(__dirname, '../../../data/seed_data/금융용어사전.csv')
+      if (existsSync(csvPath)) {
+        const csvContent = readFileSync(csvPath, 'utf-8').replace(/^\uFEFF/, '') // BOM 제거
+        const lines = csvContent.split('\n').slice(1) // 헤더 스킵
+        let loaded = 0
+        for (const line of lines) {
+          if (!line.trim()) continue
+          // CSV 파싱: "term","description" 형태
+          const match = line.match(/^"?([^"]*)"?\s*,\s*"?([\s\S]*)"?\s*$/)
+          if (match && match[1]?.trim()) {
+            const term = match[1].trim().replace(/""/g, '"')
+            const desc = (match[2] || '').trim().replace(/""/g, '"').replace(/"$/, '')
+            if (term && desc) {
+              try {
+                await pool.query('INSERT INTO glossary (term, description) VALUES ($1, $2) ON CONFLICT DO NOTHING', [term, desc])
+                loaded++
+              } catch {}
+            }
+          }
+        }
+        console.log(`Glossary loaded: ${loaded} terms from CSV`)
+      } else {
+        console.log('Glossary CSV not found, skipping')
+      }
+    } else {
+      console.log(`Glossary already has ${glossaryCount[0].cnt} terms, skipping`)
     }
   } finally {
     await pool.end()
