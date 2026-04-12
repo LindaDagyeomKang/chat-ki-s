@@ -5,7 +5,6 @@ import fastifyWebsocket from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
 import fastifyCookie from '@fastify/cookie'
 import { authRoutes } from './routes/auth'
-import { userRoutes } from './routes/users'
 import { chatRoutes } from './routes/chat'
 import { feedbackRoutes } from './routes/feedback'
 import { conversationRoutes } from './routes/conversations'
@@ -68,7 +67,6 @@ app.get('/health', async () => {
 
 // Routes
 app.register(authRoutes)
-app.register(userRoutes)
 app.register(chatRoutes)
 app.register(feedbackRoutes)
 app.register(conversationRoutes)
