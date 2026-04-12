@@ -218,17 +218,29 @@ export async function conversationRoutes(app: FastifyInstance) {
 
           // search_documents는 AI 서비스의 RAG를 호출
           if (tc.name === 'search_documents') {
+            // LLM이 축약한 query와 원본 질문을 결합하여 검색 정확도 향상
+            const searchQuery = args.query || content
             const ragRes = await fetch(`${AI_SERVICE_URL}/chat`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ message: args.query, mode: 'rag', history: agentHistory }),
+              body: JSON.stringify({ message: searchQuery, mode: 'rag', history: agentHistory }),
             })
             if (ragRes.ok) {
               const ragBody = await ragRes.json() as any
+              // 출처 정보를 답변에 포함
+              let ragContent = ragBody.answer || '관련 문서를 찾지 못했습니다.'
+              if (ragBody.sources?.length > 0) {
+                const sourceNames = ragBody.sources
+                  .map((s: any) => s.source?.replace('.md', '').replace(/_/g, ' '))
+                  .filter((s: any, i: number, arr: any[]) => s && arr.indexOf(s) === i)
+                if (sourceNames.length > 0) {
+                  ragContent += `\n📄 출처: ${sourceNames.join(', ')}`
+                }
+              }
               toolResults.push({
                 role: 'tool',
                 tool_call_id: tc.id,
-                content: ragBody.answer || '관련 문서를 찾지 못했습니다.',
+                content: ragContent,
               })
             } else {
               toolResults.push({ role: 'tool', tool_call_id: tc.id, content: '문서 검색에 실패했습니다.' })

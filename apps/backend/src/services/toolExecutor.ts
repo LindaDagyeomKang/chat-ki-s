@@ -642,8 +642,14 @@ export async function executeTool(
     case 'search_glossary': {
       const searchTerm = (args.term || '').trim()
       if (!searchTerm) return { result: '검색할 용어를 입력해 주세요.' }
-      const glossaryResults = await db.execute(sql`SELECT term, description FROM glossary WHERE term ILIKE ${'%' + searchTerm + '%'} LIMIT 3`)
-      const glossaryRows = (glossaryResults as any).rows || glossaryResults
+      // 정확한 매칭 우선, 부분 매칭 fallback
+      let glossaryResults = await db.execute(sql`SELECT term, description FROM glossary WHERE term ILIKE ${searchTerm} LIMIT 3`)
+      let glossaryRows = (glossaryResults as any).rows || glossaryResults
+      if (glossaryRows.length === 0) {
+        // 부분 매칭 (약어 포함 검색)
+        glossaryResults = await db.execute(sql`SELECT term, description FROM glossary WHERE term ILIKE ${'%' + searchTerm + '%'} OR description ILIKE ${'%' + searchTerm + '%'} LIMIT 3`)
+        glossaryRows = (glossaryResults as any).rows || glossaryResults
+      }
       if (glossaryRows.length > 0) {
         const glossaryList = glossaryRows.map((r: any, i: number) => `${i + 1}. **${r.term}**\n${r.description.slice(0, 400)}`).join('\n\n')
         return { result: `금융 용어 검색 결과:\n\n${glossaryList}` }
