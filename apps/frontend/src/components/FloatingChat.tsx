@@ -43,6 +43,7 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
   const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 })
   const [unreadCount, setUnreadCount] = useState(0)
   const [pendingNotifications, setPendingNotifications] = useState<any[]>([])
+  const [showFaq, setShowFaq] = useState(false)
 
   // 알림 체크 (30초마다)
   useEffect(() => {
@@ -355,9 +356,41 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
         )}
       </div>
 
-      {/* Input */}
+      {/* FAQ Toggle + Input */}
       <div className="px-4 py-4 flex-shrink-0" style={{ borderTop: '1px solid #F1F5F9', background: '#FFF' }}>
+        {/* FAQ 빠른 질문 토글 */}
+        {showFaq && messages.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {[
+              '챗키스 활용 방법',
+              '오늘 일정 확인',
+              '회의실 예약 현황',
+              '연차 잔여일수 확인',
+              '법인카드 사용 기준',
+            ].map((q) => (
+              <button
+                key={q}
+                onClick={() => { handleSend(q, 'rag'); setShowFaq(false) }}
+                className="px-3 py-1.5 rounded-full text-[10px] font-medium transition-colors hover:bg-gray-100"
+                style={{ border: '1px solid #E2E8F0', background: '#FFF', color: '#111547' }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-2 px-3 py-2" style={{ borderRadius: 16, background: '#F1F5F9' }}>
+          {/* FAQ 토글 버튼 */}
+          <button
+            onClick={() => setShowFaq(!showFaq)}
+            className="flex-shrink-0 transition-colors"
+            title="빠른 질문"
+            style={{ color: showFaq ? '#E1007F' : '#94A3B8' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+            </svg>
+          </button>
           <input
             type="text"
             placeholder="궁금한 내용을 입력하세요..."
