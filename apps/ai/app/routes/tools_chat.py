@@ -30,6 +30,7 @@ class ToolsChatRequest(BaseModel):
     message: str
     history: list[HistoryMessage] = Field(default_factory=list)
     pageContext: Optional[str] = None
+    userContext: Optional[str] = None
 
 
 class ToolCallResult(BaseModel):
@@ -56,7 +57,11 @@ async def tools_chat(body: ToolsChatRequest):
     day_name = day_names[now.weekday()]
     date_context = f"\n\n## 현재 시간 정보\n- 오늘 날짜: {today_str} ({day_name}요일)\n- 현재 시간: {now.strftime('%H:%M')} (KST)\n- 연도: {now.year}년\n⚠️ 날짜를 언급할 때 반드시 이 정보를 기준으로 하세요. '다음 주'는 오늘 기준 다음 월요일~금요일입니다. 캘린더 일정 등록 시 연도는 반드시 {now.year}년을 사용하세요."
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT + date_context}]
+    user_info = ""
+    if body.userContext:
+        user_info = f"\n\n## 현재 사용자 정보\n- 현재 사용자: {body.userContext}\n- '우리 팀', '우리 부서', '내 팀' 등의 표현은 이 사용자의 소속을 기준으로 해석하세요."
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + date_context + user_info}]
 
     # 히스토리
     for h in body.history[-8:]:

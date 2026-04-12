@@ -155,6 +155,10 @@ export async function conversationRoutes(app: FastifyInstance) {
       return reply.status(404).send({ error: 'Conversation not found' })
     }
 
+    // 사용자 프로필 조회 (AI에 전달할 컨텍스트용)
+    const currentUser = (await db.select().from(usersTable).where(eq(usersTable.id, payload.sub)).limit(1))[0]
+    const userContext = currentUser ? `${currentUser.name} (${currentUser.department})` : ''
+
     // Save user message
     await db
       .insert(messages)
@@ -200,7 +204,7 @@ export async function conversationRoutes(app: FastifyInstance) {
       const toolsRes = await fetch(`${AI_SERVICE_URL}/chat/tools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: messageWithContext, history: agentHistory, pageContext: pageContext || undefined }),
+        body: JSON.stringify({ message: messageWithContext, history: agentHistory, pageContext: pageContext || undefined, userContext: userContext || undefined }),
       })
 
       if (!toolsRes.ok) throw new Error('tools chat failed')
