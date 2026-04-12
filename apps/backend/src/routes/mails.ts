@@ -94,6 +94,13 @@ export async function mailRoutes(app: FastifyInstance) {
     return { success: true }
   })
 
+  // 완전 삭제 (DB에서 제거)
+  app.delete<{ Params: { id: string } }>('/api/mails/:id', { preHandler: [app.authenticate] }, async (request) => {
+    const { id } = request.params
+    await db.delete(mails).where(and(eq(mails.id, id), eq(mails.deleted, true)))
+    return { success: true }
+  })
+
   // 메일 보내기
   app.post<{
     Body: { toEmployeeId: string; subject: string; body: string }

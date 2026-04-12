@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getInbox, getSentMails, getStarredMails, getDraftMails, getTrashMails, getMail, sendMail, toggleStarMail, deleteMail, restoreMail } from '@/lib/api'
+import { getInbox, getSentMails, getStarredMails, getDraftMails, getTrashMails, getMail, sendMail, toggleStarMail, deleteMail, permanentDeleteMail, restoreMail } from '@/lib/api'
 import type { Mail } from '@/lib/api'
 import { usePageContext } from '@/contexts/PageContext'
 import IntranetSidebar from '@/components/IntranetSidebar'
@@ -175,9 +175,16 @@ export default function MailsPage() {
 
   async function handleBulkDelete() {
     for (const id of selectedIds) {
-      try { await deleteMail(id) } catch {}
+      try {
+        if (activeFolder === 'trash') {
+          await permanentDeleteMail(id)
+        } else {
+          await deleteMail(id)
+        }
+      } catch {}
     }
     setSelectedIds(new Set())
+    setSelected(null)
     fetchMails(activeFolder)
   }
 

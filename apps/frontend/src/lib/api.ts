@@ -259,6 +259,10 @@ export async function deleteMail(id: string): Promise<{ success: boolean }> {
   return apiFetch(`/api/mails/${id}/delete`, { method: 'PATCH', body: '{}' })
 }
 
+export async function permanentDeleteMail(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`/api/mails/${id}`, { method: 'DELETE' })
+}
+
 export async function restoreMail(id: string): Promise<{ success: boolean }> {
   return apiFetch(`/api/mails/${id}/restore`, { method: 'PATCH', body: '{}' })
 }
