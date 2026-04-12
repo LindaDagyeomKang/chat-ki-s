@@ -247,25 +247,38 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F8FAFC' }}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <img src="/images/image 4.png" alt="" className="w-20 h-20 mb-4" />
-              <h2 className="text-lg font-semibold mb-2" style={{ color: '#111547' }}>안녕하세요! {botName}입니다</h2>
-              <p className="text-sm max-w-sm mb-6" style={{ color: '#94A3B8' }}>
-                무엇을 도와드릴까요? 온보딩, 업무, 사내 정보 등을 안내해 드립니다.
-              </p>
-              <div className="flex flex-wrap gap-2 max-w-md justify-center">
+            <div className="flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto gap-6">
+              {/* 타이틀 + 환영 인사 */}
+              <div>
+                <img src="/images/image 4.png" alt="" className="w-20 h-20 mb-4 mx-auto" />
+                <h2 className="text-xl font-bold mb-2" style={{ color: '#111547' }}>
+                  키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
+                </h2>
+                <p className="text-sm" style={{ color: '#94A3B8' }}>
+                  안녕하세요! 궁금한 점을 물어보시면 빠르게 안내해 드리겠습니다.
+                </p>
+              </div>
+
+              {/* CTA 버튼 */}
+              <button
+                onClick={() => handleSend('챗키스 활용 방법', 'rag')}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-colors hover:bg-pink-50"
+                style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
+              >
+                📋 챗키스 활용 가이드
+              </button>
+
+              {/* FAQ 빠른 질문 (오른쪽 정렬) */}
+              <div className="flex flex-col gap-2 items-end w-full">
                 {[
-                  '연차 신청은 어떻게 해?',
-                  '법인카드 사용 원칙이 뭐야?',
-                  'PC 세팅 어떻게 해?',
-                  '시스템 권한 신청 방법은?',
-                  '내 메일 확인해줘',
-                  '공지사항 뭐 있어?',
+                  '인사팀 담당자가 누구예요?',
+                  '연차 신청 어떻게 해요?',
+                  '우리 회사 복지 규정이 뭔가요?',
                 ].map((q) => (
                   <button
                     key={q}
                     onClick={() => handleSend(q, 'rag')}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors"
+                    className="px-5 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-gray-50"
                     style={{ border: '1px solid #E2E8F0', background: '#FFF', color: '#111547' }}
                   >
                     {q}
@@ -335,6 +348,9 @@ export default function ChatPage() {
               )
             })()}
             <ChatInput onSend={handleSend} disabled={sending} />
+            <p className="text-center mt-2" style={{ fontSize: 11, color: '#94A3B8' }}>
+              AI는 한정된 데이터에 기반하니, 중요한 정보는 추가 확인을 권장해요.
+            </p>
           </div>
         </div>
       </div>
