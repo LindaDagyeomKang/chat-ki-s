@@ -238,6 +238,7 @@ async def chat(body: ChatRequest):
         "answer": result["answer"],
         "sources": sources,
         "is_fallback": False,
+        "validated": result.get("validated", True),
         "model": result["model"],
         "usage": result["usage"],
         "suggestedQuestions": suggested,

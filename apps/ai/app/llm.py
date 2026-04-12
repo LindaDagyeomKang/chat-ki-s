@@ -86,6 +86,53 @@ def _build_history_messages(history: list[dict]) -> list[dict]:
     return msgs
 
 
+VALIDATION_PROMPT = """\
+당신은 답변 품질 검증기입니다. 아래 [질문]과 [검색된 문서]를 근거로 [생성된 답변]이 적절한지 판단하세요.
+
+## 판단 기준
+1. 답변이 검색된 문서의 내용에 근거하는가? (근거 없는 정보 포함 시 부적절)
+2. 질문의 의도에 맞는 답변인가?
+3. 사실과 다르거나 지어낸 내용(할루시네이션)이 없는가?
+
+## 응답 형식
+반드시 아래 형식으로만 응답하세요:
+판정: 적절 또는 부적절
+사유: (한 줄로 간단히)\
+"""
+
+
+async def _validate_answer(question: str, hits: list[dict], answer: str) -> bool:
+    """생성된 답변의 적절성을 LLM으로 검증한다. 적절하면 True."""
+    client = _get_client()
+
+    doc_summary = "\n".join(
+        f"- {h['content'][:200]}... (출처: {h['source']})" for h in hits[:3]
+    )
+
+    user_msg = (
+        f"[질문]\n{question}\n\n"
+        f"[검색된 문서]\n{doc_summary}\n\n"
+        f"[생성된 답변]\n{answer}"
+    )
+
+    try:
+        response = await client.chat.completions.create(
+            model=settings.llm_model,
+            temperature=0,
+            max_tokens=100,
+            messages=[
+                {"role": "system", "content": VALIDATION_PROMPT},
+                {"role": "user", "content": user_msg},
+            ],
+        )
+        result = response.choices[0].message.content or ""
+        logger.info("answer_validation: %s", result.replace("\n", " "))
+        return "부적절" not in result
+    except Exception:
+        logger.exception("answer validation failed, passing through")
+        return True  # 검증 실패 시 답변 통과 (서비스 중단 방지)
+
+
 async def call_llm(question: str, hits: list[dict], history: list[dict] | None = None) -> dict:
     """Non-streaming LLM call. Returns dict with answer, model, usage."""
     client = _get_client()
@@ -105,14 +152,26 @@ async def call_llm(question: str, hits: list[dict], history: list[dict] | None =
     )
     choice = response.choices[0]
     usage = response.usage
+    answer = choice.message.content or ""
+
+    # 답변 적절성 검증 (프롬프트 체이닝)
+    is_valid = await _validate_answer(question, hits, answer)
+    if not is_valid:
+        logger.warning("answer rejected by validation: q=%s", question[:50])
+        answer = (
+            "죄송합니다. 검색된 문서만으로는 정확한 답변을 드리기 어렵습니다.\n"
+            "정확한 정보는 담당 부서 또는 멘토에게 문의해 주세요."
+        )
+
     return {
-        "answer": choice.message.content or "",
+        "answer": answer,
         "model": response.model,
         "usage": {
             "prompt_tokens": usage.prompt_tokens,
             "completion_tokens": usage.completion_tokens,
             "total_tokens": usage.total_tokens,
         },
+        "validated": is_valid,
     }
 
 
