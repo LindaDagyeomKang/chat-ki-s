@@ -288,37 +288,42 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F8FAFC' }}>
         {messages.length === 0 ? (
-          <div className="flex flex-col h-full">
-            {/* 추천 질문 버튼 */}
-            <div className="flex flex-wrap gap-2 mb-4 pt-2">
+          <div className="flex flex-col px-2 py-4 gap-5">
+            {/* 타이틀 + 환영 인사 */}
+            <div>
+              <h2 className="text-[15px] font-bold mb-2" style={{ color: '#111547' }}>
+                키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
+              </h2>
+              <p className="text-[12px] leading-relaxed" style={{ color: '#475569' }}>
+                안녕하세요! 궁금한 점을 물어보시면{'\n'}빠르게 안내해 드리겠습니다.
+              </p>
+            </div>
+
+            {/* CTA 버튼 */}
+            <button
+              onClick={() => handleSend('챗키스 활용 방법', 'rag')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-colors"
+              style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
+            >
+              📋 챗키스 활용 가이드
+            </button>
+
+            {/* FAQ 빠른 질문 */}
+            <div className="flex flex-col gap-2">
               {[
-                '챗키스 활용 방법',
-                '오늘 일정 확인',
-                '회의실 예약 현황',
-                '연차 잔여일수 확인',
-                '법인카드 사용 기준',
+                '인사팀 담당자가 누구예요?',
+                '연차 신청 어떻게 해요?',
+                '우리 회사 복지 규정이 뭔가요?',
               ].map((q) => (
                 <button
                   key={q}
                   onClick={() => handleSend(q, 'rag')}
-                  className="px-3 py-1.5 rounded-full text-[10px] font-medium transition-colors"
+                  className="w-full text-left px-4 py-3 rounded-xl text-[12px] font-medium transition-colors hover:bg-gray-50"
                   style={{ border: '1px solid #E2E8F0', background: '#FFF', color: '#111547' }}
                 >
                   {q}
                 </button>
               ))}
-            </div>
-            {/* 봇 아바타 + 환영 메시지 */}
-            <div className="flex items-start gap-2 mt-auto">
-              <img src="https://api.builder.io/api/v1/image/assets/TEMP/7904caf50d5241750d037ae631132fb53d9fcd54?width=86" alt="" className="w-10 h-9 flex-shrink-0" />
-              <div className="flex flex-col gap-1">
-                <div className="p-3 text-[11px] font-medium leading-relaxed" style={{ borderRadius: '0 16px 16px 16px', border: '1px solid #F1F5F9', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', color: '#111547' }}>
-                  안녕하세요! 무엇을 도와드릴까요?{'\n'}오늘의 일정이나 결재 문서를 확인해 드릴 수 있습니다.
-                </div>
-                <span style={{ fontSize: 8, color: '#94A3B8', fontFamily: 'Manrope', paddingLeft: 4 }}>
-                  {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                </span>
-              </div>
             </div>
           </div>
         ) : (
@@ -362,11 +367,9 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
         {showFaq && messages.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {[
-              '챗키스 활용 방법',
-              '오늘 일정 확인',
-              '회의실 예약 현황',
-              '연차 잔여일수 확인',
-              '법인카드 사용 기준',
+              '인사팀 담당자가 누구예요?',
+              '연차 신청 어떻게 해요?',
+              '우리 회사 복지 규정이 뭔가요?',
             ].map((q) => (
               <button
                 key={q}
