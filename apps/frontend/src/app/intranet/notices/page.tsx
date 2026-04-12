@@ -87,7 +87,7 @@ export default function NoticesPage() {
   }
 
   return (
-    <div className="flex flex-1 min-h-0">
+    <div className="flex flex-1 min-h-0 h-full overflow-hidden">
     <IntranetSidebar userName={userName} userDept={userDept} userRole={userRole}>
       {/* 게시판 탭 네비 */}
       <nav className="py-4 px-4 space-y-1">
