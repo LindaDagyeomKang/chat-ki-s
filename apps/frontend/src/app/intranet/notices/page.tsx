@@ -121,7 +121,7 @@ export default function NoticesPage() {
     </IntranetSidebar>
 
     {/* 메인 콘텐츠 */}
-    <main className="flex-1 h-0 overflow-y-scroll p-8 flex flex-col gap-8">
+    <main className="p-8 flex flex-col gap-8" style={{ height: 'calc(100vh - 64px)', overflowY: 'auto' }}>
         {/* 헤더 */}
         <div className="flex items-start justify-between">
           <div>
