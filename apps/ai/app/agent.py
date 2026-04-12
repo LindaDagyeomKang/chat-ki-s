@@ -190,8 +190,9 @@ def _resolve_date(date_str: str | None) -> str | None:
     if not date_str:
         return None
     import re
-    from datetime import datetime, timedelta
-    today = datetime.now()
+    from datetime import datetime, timedelta, timezone
+    KST = timezone(timedelta(hours=9))
+    today = datetime.now(KST)
     if '오늘' in date_str:
         return today.strftime('%Y-%m-%d')
     if '내일' in date_str:
@@ -277,7 +278,8 @@ def _build_action_params(intent: str, params: dict, original_message: str) -> di
     if intent == 'expense':
         category = params.get('category', 'etc')
         amount = params.get('amount') or _parse_amount(original_message)
-        date = _resolve_date(params.get('date')) or datetime.now().strftime('%Y-%m-%d')
+        from datetime import timezone as tz, timedelta as td
+        date = _resolve_date(params.get('date')) or datetime.now(tz(td(hours=9))).strftime('%Y-%m-%d')
         return {
             'title': EXPENSE_CATEGORY_LABELS.get(category, '기타'),
             'category': category,

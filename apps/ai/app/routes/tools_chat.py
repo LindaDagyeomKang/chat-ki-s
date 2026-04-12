@@ -48,11 +48,13 @@ async def tools_chat(body: ToolsChatRequest):
     """1단계: 유저 메시지 → LLM (도구 호출 또는 직접 답변)"""
     client = AsyncOpenAI(api_key=settings.openai_api_key)
 
-    now = datetime.now()
+    from datetime import timezone, timedelta
+    KST = timezone(timedelta(hours=9))
+    now = datetime.now(KST)
     today_str = now.strftime('%Y-%m-%d')
     day_names = ['월', '화', '수', '목', '금', '토', '일']
     day_name = day_names[now.weekday()]
-    date_context = f"\n\n## 현재 시간 정보\n- 오늘 날짜: {today_str} ({day_name}요일)\n- 현재 시간: {now.strftime('%H:%M')}\n- 연도: {now.year}년\n⚠️ 날짜를 언급할 때 반드시 이 정보를 기준으로 하세요. 캘린더 일정 등록 시 연도는 반드시 {now.year}년을 사용하세요."
+    date_context = f"\n\n## 현재 시간 정보\n- 오늘 날짜: {today_str} ({day_name}요일)\n- 현재 시간: {now.strftime('%H:%M')} (KST)\n- 연도: {now.year}년\n⚠️ 날짜를 언급할 때 반드시 이 정보를 기준으로 하세요. '다음 주'는 오늘 기준 다음 월요일~금요일입니다. 캘린더 일정 등록 시 연도는 반드시 {now.year}년을 사용하세요."
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT + date_context}]
 
