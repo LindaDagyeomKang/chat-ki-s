@@ -51,3 +51,5 @@ venv/
 chroma_data/
 
 apps/frontend/public/cl/
+scripts/eval-chatbot.py
+scripts/eval-result.json
