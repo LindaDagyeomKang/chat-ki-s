@@ -133,21 +133,31 @@ export default function Message({ message, onFeedback, feedbackGiven, saved, onS
 
         {hasSources && (
           <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-xs">
-            {message.sources!.map((src, i) => (
-              <div key={i} className="flex items-center gap-2 text-gray-600">
-                <span className="text-gray-400">📄</span>
-                <span>
-                  <span className="text-gray-500 font-medium">출처: </span>
-                  {src.url ? (
-                    <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
-                      {src.title}
+            {message.sources!.map((src, i) => {
+              // SOURCE_DOC_MAP에서 다운로드 링크 찾기
+              const sourceKey = Object.keys(SOURCE_DOC_MAP).find(k => src.title?.includes(k))
+              const downloadUrl = sourceKey ? `${AI_URL}/documents/source/${SOURCE_DOC_MAP[sourceKey]}` : src.url
+              return (
+                <div key={i} className="flex items-center gap-2 text-gray-600">
+                  <span className="text-gray-400">📄</span>
+                  <span className="flex-1">
+                    <span className="text-gray-500 font-medium">출처: </span>
+                    {downloadUrl ? (
+                      <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
+                        {src.title}
+                      </a>
+                    ) : (
+                      <span className="font-medium">{src.title}</span>
+                    )}
+                  </span>
+                  {downloadUrl && (
+                    <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500" title="원본 문서 다운로드">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                     </a>
-                  ) : (
-                    <span className="font-medium">{src.title}</span>
                   )}
-                </span>
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         )}
 

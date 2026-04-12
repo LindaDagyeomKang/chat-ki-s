@@ -338,11 +338,26 @@ def main():
         if result["passed"]:
             categories[cat]["passed"] += 1
 
-    # 최종 리포트
+    # ── 고도화된 평가 지표 ──
     total = len(results)
     passed = sum(1 for r in results if r["passed"])
     failed = total - passed
     avg_ms = round(sum(r["elapsed_ms"] for r in results) / total) if total else 0
+
+    # 해결률: 폴백 없이 답변한 비율
+    non_fallback_scenarios = [r for r in results if not r.get("expect_fallback", False)]
+    resolved = sum(1 for r in non_fallback_scenarios if "폴백됨" not in " ".join(r.get("issues", [])))
+    resolution_rate = round(resolved / len(non_fallback_scenarios) * 100, 1) if non_fallback_scenarios else 0
+
+    # 그라운딩 점수: 출처가 포함된 답변 비율 (RAG 카테고리만)
+    rag_results = [r for r in results if r.get("category") == "RAG" if "error" not in r]
+    grounded = sum(1 for r in rag_results if "출처 미표시" not in " ".join(r.get("issues", [])))
+    grounding_rate = round(grounded / len(rag_results) * 100, 1) if rag_results else 0
+
+    # 폴백 정확도: 폴백해야 할 때 정확히 폴백한 비율
+    fallback_scenarios = [r for r in results if r.get("category") == "Fallback"]
+    fallback_correct = sum(1 for r in fallback_scenarios if r["passed"])
+    fallback_accuracy = round(fallback_correct / len(fallback_scenarios) * 100, 1) if fallback_scenarios else 0
 
     print("=" * 60)
     print("  최종 결과")
@@ -351,6 +366,11 @@ def main():
     print(f"  통과: {passed}개  |  실패: {failed}개")
     print(f"  통과율: {round(passed/total*100, 1)}%")
     print(f"  평균 응답 시간: {avg_ms}ms")
+    print()
+    print("  핵심 지표:")
+    print(f"    해결률 (Resolution Rate): {resolution_rate}% ({resolved}/{len(non_fallback_scenarios)})")
+    print(f"    그라운딩 점수 (Faithfulness): {grounding_rate}% ({grounded}/{len(rag_results)})")
+    print(f"    폴백 정확도 (Fallback Accuracy): {fallback_accuracy}% ({fallback_correct}/{len(fallback_scenarios)})")
     print()
 
     print("  카테고리별:")
@@ -375,6 +395,9 @@ def main():
             "failed": failed,
             "pass_rate": round(passed / total * 100, 1),
             "avg_response_ms": avg_ms,
+            "resolution_rate": resolution_rate,
+            "grounding_rate": grounding_rate,
+            "fallback_accuracy": fallback_accuracy,
         },
         "categories": categories,
         "results": results,
