@@ -1,7 +1,8 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import fastifyJwt from '@fastify/jwt'
+import fastifyCookie from '@fastify/cookie'
 import { authRoutes } from '../routes/auth'
-import { userRoutes } from '../routes/users'
+import { chatRoutes } from '../routes/chat'
 
 // Mock the database module
 jest.mock('../db', () => ({
@@ -10,6 +11,8 @@ jest.mock('../db', () => ({
     from: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     limit: jest.fn(),
+    update: jest.fn().mockReturnThis(),
+    set: jest.fn().mockReturnThis(),
   },
 }))
 
@@ -38,8 +41,9 @@ function buildApp(): FastifyInstance {
     }
   })
 
+  app.register(fastifyCookie)
   app.register(authRoutes)
-  app.register(userRoutes)
+  app.register(chatRoutes)
 
   return app
 }
