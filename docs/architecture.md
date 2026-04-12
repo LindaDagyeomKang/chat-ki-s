@@ -1,461 +1,154 @@
-# Chat-Ki-S 시스템 아키텍처
+# Chat-Ki-S System Architecture
 
-> 최종 업데이트: 2026-04-12
+> Last updated: 2026-04-12
 
 ---
 
-## 1. 서비스 개요
+## 1. Overview
 
 Chat-Ki-S는 키움증권 신입사원 온보딩을 지원하는 AI 챗봇 + 가상 인트라넷 플랫폼이다.
 사내 문서 기반 RAG, OpenAI Function Calling 23개 도구, 자연어→SQL 변환(DataHub)을 결합하여
-신입사원의 업무 질문에 즉시 답변하고, 인트라넷 업무(메일, 연차, 경비, 결재 등)를 챗봇으로 처리한다.
+신입사원의 업무 질문에 즉시 답변하고, 인트라넷 업무를 챗봇으로 처리한다.
+
+(추후 png 추가 예정)
 
 ---
 
-## 2. 시스템 구성 다이어그램
+## 2. Service Boundary
 
+| Layer | Tech | Responsibility |
+|-------|------|---------------|
+| **Frontend** | Next.js 14, React 18, Tailwind CSS | UI, 인트라넷 9개 서브시스템, 플로팅 챗봇 |
+| **Backend** | Fastify 4, Drizzle ORM, bcrypt | 18 REST Routes, WebSocket, JWT 인증, DataHub 2차 검증 |
+| **AI Service** | FastAPI, LangChain, OpenAI | Function Calling 23 Tools, RAG, DataHub SQL 생성+1차 검증 |
+| **PostgreSQL 16** | Drizzle ORM | 정형 데이터 18개 테이블 (users, mails, leaves, expenses ...) |
+| **ChromaDB** | text-embedding-3-small | 비정형 문서 벡터 저장/검색 (cosine, Top-5) |
+| **OpenAI API** | GPT-4o-mini | LLM 답변 생성 + 임베딩 변환 |
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  브라우저                                                     │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  Next.js 14 Frontend  (port 3000)                      │  │
-│  │                                                        │  │
-│  │  - /chat              풀페이지 챗 UI                   │  │
-│  │  - /intranet/*        인트라넷 9개 서브시스템           │  │
-│  │    (메일, 공지, 캘린더, 결재, 휴가, 경비,              │  │
-│  │     HR, 주소록, 문서관리)                               │  │
-│  │  - FloatingChat       인트라넷 내 플로팅 챗봇          │  │
-│  │  - /login             사번+비밀번호 로그인             │  │
-│  └───────────────┬────────────────────────────────────────┘  │
-└──────────────────┼───────────────────────────────────────────┘
-                   │ HTTP/REST  +  WebSocket (streaming)
-                   ▼
-┌──────────────────────────────────────────────────────────────┐
-│  Fastify Backend  (port 4000)                                │
-│                                                              │
-│  인증: JWT (개발: 사번+비밀번호 / 프로덕션: 포털 세션)       │
-│                                                              │
-│  REST API 18개 라우트 (대표 엔드포인트만 기재):               │
-│  - 인증:    /api/auth/login, /api/users/me                   │
-│  - 챗봇:    /api/chat, /api/conversations, /api/feedback     │
-│  - 인트라넷: /api/mails, /api/notices, /api/leaves,          │
-│             /api/expenses, /api/calendar, /api/approvals,    │
-│             /api/assignments, /api/employees, /api/rooms,    │
-│             /api/documents                                   │
-│  - AI연동:  /api/rag, /api/agent/execute, /api/datahub/execute│
-│  - WS:     /api/conversations/:id/stream                     │
-│  ※ 전체 API 명세: docs/api-spec.md 참조                      │
-│                                                              │
-│  DataHub 2차 검증:                                            │
-│  - AI가 생성한 SQL의 안전성 재검증 (SELECT만, 민감컬럼 차단)  │
-│  - 통과 시 PostgreSQL 직접 실행, 결과 20행 제한              │
-└───────────────┬──────────────────────────────────────────────┘
-                │ HTTP (내부망)
-                ▼
-┌──────────────────────────────────────────────────────────────┐
-│  FastAPI AI Service  (port 8001)                             │
-│                                                              │
-│  LLM: GPT-4o-mini (temperature=0.1, max_tokens=512)         │
-│                                                              │
-│  핵심 기능:                                                   │
-│  - Function Calling: 23개 도구 중 적절한 도구 자동 선택       │
-│  - RAG: ChromaDB 벡터 검색 + LLM 답변 생성                   │
-│  - DataHub: 자연어→SQL 변환 + 1차 검증                       │
-│  - Agent: 도구 조합 실행 + 결과 자연어 변환                   │
-│                                                              │
-│  라우트:                                                      │
-│  - /chat, /chat/stream    RAG + LLM 답변                     │
-│  - /search                시맨틱 검색                        │
-│  - /documents/ingest      문서 업로드 → 벡터화               │
-│  - /agent/execute         Function Calling 실행              │
-│  - /datahub/query         자연어→SQL 생성 + 검증             │
-│  - /glossary/search       금융용어 검색                      │
-└───────────────┬──────────────────────────────────────────────┘
-                │
-    ┌───────────┴───────────┐
-    ▼                       ▼
-┌─────────────────┐  ┌─────────────────────────────────────────┐
-│  ChromaDB       │  │  PostgreSQL 16  (port 5432)              │
-│  (port 8000)    │  │                                          │
-│                 │  │  테이블 (12개 + 시스템 6개):              │
-│  벡터 DB        │  │  - 사용자: users, employees (약 1,250명) │
-│  - 임베딩 모델: │  │  - 챗봇: conversations, messages         │
-│    text-        │  │  - 피드백: feedback, good_answers        │
-│    embedding-   │  │  - 인트라넷: mails, notices,             │
-│    3-small      │  │    leave_requests, expenses,             │
-│  - 컬렉션:     │  │    calendar_events, assignments,         │
-│    chat_ki_s_   │  │    documents, meeting_rooms,             │
-│    docs         │  │    room_reservations                     │
-│  - 청크:       │  │  - 설문: survey_questions,                │
-│    1,000자     │  │    survey_responses                       │
-│    (overlap    │  │  - 용어: glossary (약 1,600개)             │
-│    200자)      │  │                                          │
-│  - 유사도:     │  │  접근 제한 테이블 (6개):                  │
-│    코사인,     │  │  feedback, good_answers,                  │
-│    Top-5       │  │  conversations, messages,                 │
-│  - 임계값:     │  │  pending_notifications, rank_levels       │
-│    ≥0.70 고신뢰│  │                                          │
-│    ≥0.35 저신뢰│  └───────────────────────────────────────────┘
-│    <0.35 폴백  │
-│                │
-│  시드 데이터:  │
-│  FAQ 25건      │
-│  자동 인덱싱   │
-└─────────────────┘
-```
+> AI Service는 외부 직접 노출 금지 — 반드시 Backend를 경유한다.
 
 ---
 
-## 3. 데이터 소스 구조 — 무엇을, 어디에, 어떻게
+## 3. Technical Flow
 
-### 3-1. 신입사원이 필요로 하는 정보와 데이터 매핑
+사용자 질문이 처리되는 전체 파이프라인이다.
 
-신입사원 설문조사에서 도출된 핵심 정보 수요를 기준으로, 각 항목이 어떤 형태로 존재하고 어디에 저장되며 챗봇이 어떻게 접근하는지를 정리한다.
+(추후 png 추가 예정)
 
-| 정보 수요 | 원본 데이터 형태 | 저장소 | 챗봇 접근 방식 |
-|----------|----------------|--------|--------------|
-| **업무 매뉴얼** | .docx/.md 파일 (부서별 실무지침서 18건, 사내 규정 가이드 7건) | ChromaDB (벡터화) | `search_documents` → RAG 답변 생성 |
-| **업무 담당자** | 임직원 프로필 약 1,250명 (xlsx → PostgreSQL) | PostgreSQL (`employees`) | `search_employees`, `check_leave_status`, `find_substitute` |
-| **결재 방법 / 사내 규정** | .docx 파일 (연차 가이드, 법인카드 가이드, 경비 정산 등) | ChromaDB (벡터화) | `search_documents` → RAG 답변 생성 |
-| **자료 위치** | 문서 메타데이터 (파일명, 출처) | ChromaDB (`source` 필드) | `search_documents` 결과에 출처 표시 |
-| **히스토리** | 결재문서, 메일, 경비 내역 등 | PostgreSQL (`documents`, `mails`, `expenses`) | `get_documents`, `get_mails`, `get_expense_history` |
-| **툴 사용법** | PC 세팅 가이드, IT 권한 신청 가이드 (.docx) | ChromaDB (벡터화) | `search_documents` → RAG 답변 생성 |
-| **사내 프로그램** (xxx.kiwoom.com 등) | 시스템 직접 연동 없음. 사용법 문서를 벡터화하여 안내 | ChromaDB (벡터화) | `search_documents` → RAG 답변 생성 |
+### 3-1. Phase 1 — LLM Tool Selection
 
-### 3-2. 데이터 저장 구조
+사용자 질문이 입력되면 GPT-4o-mini가 OpenAI Function Calling으로 23개 도구 중 적절한 것을 자동 선택한다.
 
-```
-원본 데이터
-│
-├── 정형 데이터 ──────────────────→ PostgreSQL 16
-│   │
-│   ├── 임직원 프로필 (xlsx)        employees 테이블 (약 1,250명)
-│   ├── 금융용어사전 (csv)          glossary 테이블 (약 1,600개)
-│   ├── 온보딩 설문 (csv)           survey_questions / survey_responses
-│   └── 업무 트랜잭션               mails, leave_requests, expenses,
-│       (시스템 생성)               calendar_events, documents 등
-│
-└── 비정형 데이터 ────────────────→ ChromaDB (벡터 DB)
-    │
-    ├── 사내 규정/가이드 (.docx)    텍스트 추출 → 청크 분할 → 임베딩 → 벡터 저장
-    ├── 부서별 실무지침서 (.md)     (chunk: 1,000자, overlap: 200자)
-    ├── 맛집/주변 정보 (.md)        임베딩 모델: text-embedding-3-small
-    └── 관리자 업로드 문서           컬렉션: chat_ki_s_docs
-        (.pdf, .docx, .txt)
-```
+### 3-2. Phase 2 — Processing (3개 경로)
 
-### 3-3. 파일 저장 정책
+**A. Structured Data (Function Calling 23 Tools)**
 
-| 구분 | 처리 방식 |
-|------|----------|
-| **시드 문서** (서비스 시작 시) | `data/seed/` 25건 + `data/seed_data/` 원본 파일을 서버에 보관. 서비스 기동 시 자동 벡터화하여 ChromaDB에 인덱싱. 원본 다운로드 가능 (`GET /documents/source/:name`) |
-| **관리자 업로드 문서** | `POST /documents/ingest`로 업로드 → **별도 파일 스토리지 없이 즉시 벡터화**. 텍스트를 추출하여 ChromaDB에 저장하고, 원본 파일은 보관하지 않음 |
-| **향후 고려** | 원본 파일 보관이 필요할 경우 오브젝트 스토리지(S3 등) 도입 검토 |
+| Category | Count | Tools |
+|----------|-------|-------|
+| Query | 8 | get_mails, get_leave_balance, get_expense_history, get_profile, get_schedule, get_notices, get_assignments, get_documents |
+| Search | 7 | search_employees, search_documents, search_glossary, check_leave_status, find_substitute, check_room_availability, list_departments |
+| Action | 5 | submit_leave, submit_expense, add_calendar_event, book_room, draft_email |
+| Survey | 2 | start_survey, submit_survey_answer |
+| DB | 1 | query_db (DataHub fallback) |
 
----
+Fastify 백엔드가 하드코딩된 SQL 쿼리를 PostgreSQL에 즉시 실행한다.
 
-## 4. 기술 플로우 — 사용자 질문 처리
+**B. Unstructured Data (ChromaDB RAG)**
 
-### 4-1. 전체 흐름
+1. 문서 업로드 → 텍스트 추출 (PDF, DOCX, TXT) → 청크 분할 (1,000자, overlap 200) → 임베딩 → ChromaDB 저장
+2. 사용자 질문 → 임베딩 변환 → 코사인 유사도 검색, Top-5 반환
+3. 유사도 점수 분기:
+   - ≥ 0.70 고신뢰 → 답변 생성
+   - ≥ 0.35 저신뢰 → 참고 수준 답변
+   - < 0.35 → 폴백 응답
 
-```
-사용자 질문 입력
-       │
-       ▼
-LLM 도구 선택 (OpenAI Function Calling)
-GPT-4o-mini가 23개 도구 중 적절한 도구 자동 선택
-       │
-       ├─────────────────┬──────────────────┐
-       ▼                 ▼                  ▼
-A. 정형 데이터     B. 비정형 데이터    C. DataHub
-(Function Calling  (ChromaDB RAG)     (자연어→SQL)
- 23개 도구)
-       │                 │                  │
-       ▼                 ▼                  ▼
-  PostgreSQL        벡터 검색          5단계 파이프라인
-  하드코딩 쿼리     유사도 매칭        (아래 상세)
-  즉시 실행
-       │                 │                  │
-       └─────────────────┴──────────────────┘
-                         │
-                         ▼
-              LLM 자연어 답변 생성 (GPT-4o-mini)
-              조회 결과 → 한국어 자연어 변환
-                         │
-                         ▼
-              사용자에게 표시 + 피드백 수집
-```
+**C. DataHub (NL-to-SQL, 5 Steps)**
 
-### 4-2. A. 정형 데이터 — Function Calling 도구 23개
+기존 23개 도구로 불가능한 집계/통계 질문을 처리한다.
 
-LLM이 사용자 질문을 분석하여 아래 도구 중 적절한 것을 자동 호출한다.
-실제 실행은 Fastify 백엔드에서 PostgreSQL 쿼리로 수행한다.
+| Step | Process | Detail |
+|------|---------|--------|
+| 1 | Metadata | 12개 테이블 스키마, FK 관계, 샘플 쿼리 로드. 접근 금지 테이블 6개 제외 |
+| 2 | SQL Generation | GPT-4o-mini (temp=0)가 PostgreSQL SELECT 쿼리 작성 |
+| 3 | 1st Validation (AI) | Python `validate_sql()`: SELECT only, 위험 키워드 10종 차단, password_hash 차단, LIMIT 20 자동 추가 |
+| 4 | 2nd Validation (Backend) | Fastify 재검증: SELECT 재확인, 위험 SQL 재검사, 민감 컬럼 차단, JWT 인증 필수 |
+| 5 | Execution | PostgreSQL 실행, 결과 최대 20행 반환 |
 
-| 분류 | 도구 (개수) | 설명 |
-|------|------------|------|
-| 조회 (8) | get_mails, get_leave_balance, get_expense_history, get_profile, get_schedule, get_notices, get_assignments, get_documents | 메일·연차·경비·프로필·일정·공지·과제·결재문서 조회 |
-| 검색 (7) | search_employees, search_documents, search_glossary, check_leave_status, find_substitute, check_room_availability, list_departments | 임직원·사내문서·금융용어·휴가확인·대리인·회의실·부서목록 검색 |
-| 실행 (5) | submit_leave, submit_expense, add_calendar_event, book_room, draft_email | 연차신청·경비정산·일정등록·회의실예약·메일작성 |
-| 설문 (2) | start_survey, submit_survey_answer | 온보딩 설문 시작·답변 제출 |
-| DB (1) | query_db | DataHub (자연어→SQL), 집계/통계/분석 질문 처리 |
+### 3-3. Phase 3 — Response & Feedback
 
-### 4-3. B. 비정형 데이터 — ChromaDB RAG 파이프라인
-
-**문서 수집 (Ingestion):**
-1. 문서 업로드 (PDF, DOCX, TXT/MD 지원)
-2. 텍스트 추출 (pypdf, python-docx)
-3. 청크 분할 (RecursiveCharacterTextSplitter, 1,000자, overlap 200자)
-4. 임베딩 변환 (OpenAI text-embedding-3-small)
-5. ChromaDB 저장 (컬렉션: `chat_ki_s_docs`)
-
-**검색 (Retrieval):**
-1. 사용자 질문 → 임베딩 벡터 변환
-2. ChromaDB 코사인 유사도 검색, Top-5 반환
-3. 유사도 점수에 따른 분기:
-   - ≥ 0.70: 고신뢰 → 검색 결과 기반 답변 생성
-   - ≥ 0.35: 저신뢰 → 참고 수준 답변 (불확실성 안내)
-   - < 0.35: 폴백 → 정보 없음 안내
-
-**시드 데이터:** 서비스 시작 시 `data/seed/` 디렉토리의 FAQ 문서 25건 자동 인덱싱
-
-### 4-4. C. DataHub — 자연어→SQL 변환 (5단계)
-
-기존 23개 도구로 처리할 수 없는 집계/분석/통계 질문을 처리한다.
-
-```
-① 메타데이터 참조
-   - 12개 테이블의 스키마 로드 (컬럼 설명, FK 관계, 샘플 쿼리)
-   - 접근 금지 테이블 6개 제외
-   - 금지 컬럼 (password_hash) 명시
-       │
-       ▼
-② SQL 생성 (GPT-4o-mini, temperature=0)
-   - 메타데이터 + 안전 규칙을 system prompt로 전달
-   - LLM이 PostgreSQL SELECT 쿼리 작성
-   - 응답 형식: "SQL: ... / 설명: ..."
-       │
-       ▼
-③ 1차 검증 — AI 서비스 (Python FastAPI)
-   validate_sql() 함수:
-   - SELECT 시작 여부 확인
-   - 위험 키워드 10종 정규식 차단 (INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE/CREATE/GRANT/REVOKE/EXEC)
-   - password_hash 컬럼 접근 차단
-   - 제한 테이블 6개 접근 차단
-   - LIMIT 없으면 자동 추가 (20행)
-       │
-       ▼
-④ 2차 검증 — 백엔드 (Node.js Fastify)
-   datahub.ts 라우트:
-   - SELECT 시작 재확인
-   - 위험 SQL 정규식 재검사
-   - 민감 컬럼 (password_hash) 접근 차단
-   - 인증된 사용자만 실행 (JWT 필수)
-       │
-       ▼
-⑤ PostgreSQL 실행
-   - 검증 통과한 SELECT 쿼리 실행
-   - 결과 최대 20행 반환
-```
-
-### 4-5. 피드백 수집 흐름
-
-```
-사용자 답변 확인
-       │
-       ├── "도움 됐어요" (helpful)
-       │       │
-       │       ├→ feedback 테이블: userId, messageId, rating, comment 저장
-       │       └→ good_answers 테이블: 해당 질문+답변 쌍 자동 저장
-       │              → 향후 답변 품질 개선 학습 데이터로 활용
-       │
-       └── "도움 안 됐어요" (unhelpful)
-               │
-               └→ feedback 테이블: rating + comment 저장
-                      → 답변 개선 참고 데이터
-```
+- LLM이 조회 결과를 한국어 자연어로 변환하여 사용자에게 전달
+- 사용자 피드백 수집:
+  - **Helpful** → `feedback` 테이블 저장 + `good_answers` 테이블에 질문+답변 쌍 자동 축적 (학습 데이터)
+  - **Unhelpful** → `feedback` 테이블 저장 (개선 참고)
 
 ---
 
-## 5. 포털 세션 연동 방식
+## 4. Data Source Mapping
 
-### MVP 접근 방식
-포털이 Chat-Ki-S 탭을 열 때 포털 JWT 또는 세션 토큰을 `postMessage`로 전달한다.
-Frontend는 이 토큰을 `Authorization: Bearer <token>` 헤더로 백엔드에 전달하고,
-Backend의 `authenticate` 미들웨어가 토큰을 검증한다.
+신입사원 설문조사에서 도출된 핵심 정보 수요와 데이터 매핑:
 
-```
-포털 → (postMessage + token) → Frontend → (Bearer token) → Backend → 검증 → 사용자 식별
-```
+| Information Need | Source Format | Storage | Chatbot Access |
+|-----------------|---------------|---------|---------------|
+| 업무 매뉴얼 | .docx/.md (25건) | ChromaDB | `search_documents` → RAG |
+| 업무 담당자 | 임직원 ~1,250명 | PostgreSQL `employees` | `search_employees` |
+| 결재 방법 / 사내 규정 | .docx (규정 가이드) | ChromaDB | `search_documents` → RAG |
+| 자료 위치 | 문서 메타데이터 | ChromaDB `source` field | `search_documents` 출처 표시 |
+| 히스토리 | 결재문서, 메일 등 | PostgreSQL | `get_documents`, `get_mails` |
+| 툴 사용법 | PC/IT 가이드 (.docx) | ChromaDB | `search_documents` → RAG |
+| 사내 프로그램 | 직접 연동 없음 | ChromaDB (사용법 문서) | `search_documents` → RAG |
 
-**보안 정책:**
-- URL 파라미터를 통한 토큰 전달은 **금지** (브라우저 히스토리/서버 로그 노출 위험)
-- `postMessage` 수신 시 반드시 `origin` 검증 (허용된 포털 도메인만 수락)
-- 토큰 만료 정책: 포털 세션 만료 시 Chat-Ki-S 세션도 자동 만료
+### File Storage Policy
 
-### 현재 구현 상태
-현재 코드베이스는 사번(employeeId) + 비밀번호 기반 JWT 로그인(`POST /api/auth/login`)을 사용한다.
-MVP 출시 전 Backend에 포털 세션 검증 미들웨어를 추가해야 한다.
-`POST /api/auth/login`은 **개발/테스트 환경 전용**으로 남겨두고,
-프로덕션에서는 포털 세션 토큰 검증 경로를 사용한다.
-
-### 환경 변수로 모드 분기
-```
-AUTH_MODE=portal   # 포털 세션 검증 (프로덕션)
-AUTH_MODE=local    # 사번+비밀번호 JWT (개발)
-```
+| Type | Policy |
+|------|--------|
+| **Seed docs** | `data/seed/` 25건, 서비스 기동 시 자동 벡터화. 원본 다운로드 가능 |
+| **Uploaded docs** | 즉시 벡터화, 원본 파일 미보관 (별도 스토리지 없음) |
+| **Future** | 원본 보관 필요 시 오브젝트 스토리지(S3 등) 도입 검토 |
 
 ---
 
-## 6. 서비스 경계 및 책임 분리
+## 5. Authentication & Security
 
-| 레이어 | 기술 | 책임 | 금지 사항 |
-|--------|------|------|-----------|
-| Frontend (Next.js 14) | React 18, Tailwind CSS, TypeScript | UI 렌더링, 인트라넷 9개 서브시스템, 챗봇 UI | LLM 직접 호출 금지 |
-| Backend (Fastify 4) | Node.js, TypeScript, Drizzle ORM | 인증, REST API 18개, WebSocket 스트리밍, DataHub 2차 검증, DB CRUD | - |
-| AI Service (FastAPI) | Python, LangChain, OpenAI, ChromaDB | Function Calling 23개 도구, RAG, DataHub SQL 생성+1차 검증, Agent | 외부 직접 노출 금지 (백엔드 경유) |
-| PostgreSQL 16 | Drizzle ORM | 정형 데이터 12개 테이블 + 시스템 6개 테이블 영속 | - |
-| ChromaDB | - | 비정형 문서 벡터 임베딩 저장/검색 | - |
+### Auth Flow
+
+```
+Portal → (postMessage + token) → Frontend → (HttpOnly Cookie) → Backend → JWT Verify
+```
+
+| Item | Implementation |
+|------|---------------|
+| **Password hashing** | bcrypt (12 rounds), SHA-256 레거시 자동 마이그레이션 |
+| **Token storage** | HttpOnly Cookie (XSS 탈취 방지), localStorage 폴백 |
+| **CORS** | 환경변수 `CORS_ORIGIN` 기반 allowlist, 개발환경만 전체 허용 |
+| **Auth mode** | `AUTH_MODE=local` (개발: 사번+비밀번호) / `AUTH_MODE=portal` (프로덕션: 포털 세션) |
+| **Token transport** | URL 파라미터 **금지**, `postMessage` origin 검증 필수 |
+| **DataHub SQL** | AI 1차 검증 + Backend 2차 검증, SELECT only, password_hash 차단 |
 
 ---
 
-## 7. 레포 구조
+## 6. API Overview
 
-```
-chat-ki-s/
-├── apps/
-│   ├── frontend/            # Next.js 14 App Router
-│   │   ├── src/
-│   │   │   ├── app/         # 페이지
-│   │   │   │   ├── chat/    # 풀페이지 챗 UI
-│   │   │   │   ├── login/   # 로그인
-│   │   │   │   └── intranet/# 인트라넷 9개 서브시스템
-│   │   │   │       ├── mails/       # 메일
-│   │   │   │       ├── notices/     # 공지사항
-│   │   │   │       ├── calendar/    # 캘린더
-│   │   │   │       ├── knowledge/   # 지식관리 (문서 업로드→벡터화)
-│   │   │   │       ├── leaves/      # 휴가/연차
-│   │   │   │       ├── expenses/    # 경비정산
-│   │   │   │       ├── approvals/   # 결재함
-│   │   │   │       ├── hr/          # HR
-│   │   │   │       ├── addressbook/ # 주소록
-│   │   │   │       ├── documents/   # 문서함
-│   │   │   │       ├── onboarding/  # 온보딩 칸반
-│   │   │   │       └── rooms/       # 회의실
-│   │   │   ├── components/  # FloatingChat, Message, ChatInput 등
-│   │   │   ├── contexts/    # PageContext (현재 페이지 컨텍스트)
-│   │   │   └── lib/         # api.ts (fetch 래퍼)
-│   │   └── Dockerfile
-│   ├── backend/             # Fastify Node.js API
-│   │   ├── src/
-│   │   │   ├── routes/      # 18개 라우트 파일
-│   │   │   │   ├── auth.ts, users.ts
-│   │   │   │   ├── chat.ts, conversations.ts, feedback.ts
-│   │   │   │   ├── mails.ts, notices.ts, leaves.ts, expenses.ts
-│   │   │   │   ├── calendar.ts, approvals.ts, assignments.ts
-│   │   │   │   ├── employees.ts, rooms.ts, documents.ts
-│   │   │   │   ├── rag.ts, agentExecute.ts, datahub.ts
-│   │   │   ├── db/          # Drizzle schema (18개 테이블), migrate, index
-│   │   │   └── types/       # Fastify 타입 확장
-│   │   └── Dockerfile
-│   └── ai/                  # Python FastAPI RAG + Agent 서비스
-│       ├── app/
-│       │   ├── routes/      # chat, search, documents, agent, datahub_query, glossary
-│       │   ├── tools.py     # Function Calling 23개 도구 정의
-│       │   ├── agent.py     # LLM Agent (도구 조합 실행)
-│       │   ├── datahub.py   # 테이블 메타데이터 + 안전 규칙
-│       │   ├── ingestion.py # 문서 파싱 + 청크 분할
-│       │   ├── search.py    # ChromaDB 시맨틱 검색
-│       │   ├── embeddings.py
-│       │   ├── chroma_client.py
-│       │   ├── keyword_router.py
-│       │   └── config.py    # 설정 (청크 크기, 임계값 등)
-│       ├── main.py
-│       ├── requirements.txt
-│       └── Dockerfile
-├── packages/
-│   └── shared/              # 공용 TypeScript 타입
-│       └── src/index.ts     # User, Message, Conversation, ChatMode 등
-├── data/
-│   ├── seed/                # FAQ 문서 25건 (자동 인덱싱 대상)
-│   └── seed_data/           # 임직원 프로필 약 1,250명, 금융용어 약 1,600개
-├── docs/                    # 아키텍처, API 명세, 개발 우선순위
-├── docker-compose.yml       # 전체 스택 (5개 서비스)
-└── package.json             # npm workspace 루트
-```
+> 전체 명세: [docs/api-spec.md](api-spec.md)
 
----
+### Backend (Fastify, Port 4000)
 
-## 8. 브랜치 전략
+| Category | Endpoints |
+|----------|----------|
+| Auth | `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/refresh` |
+| User | `GET /api/users/me`, `GET /api/users/me/profile`, `PATCH /api/users/me/profile` |
+| Chat | `POST /api/chat`, `GET/POST /api/conversations`, `WS /api/conversations/:id/stream` |
+| Feedback | `POST /api/feedback`, `GET /api/good-answers` |
+| Intranet | `/api/mails`, `/api/notices`, `/api/leaves`, `/api/expenses`, `/api/calendar`, `/api/approvals`, `/api/assignments`, `/api/employees`, `/api/rooms`, `/api/documents` |
+| AI Proxy | `POST /api/rag`, `POST /api/agent/execute`, `POST /api/datahub/execute` |
 
-```
-main          # 항상 배포 가능한 상태 유지
-├── feature/* # 기능 개발 (예: feature/floating-chat)
-├── fix/*     # 버그픽스 (예: fix/session-token-header)
-└── docs/*    # 문서 작업 (예: docs/api-spec)
-```
+### AI Service (FastAPI, Port 8001)
 
-- `main` 직접 push 금지 — PR 필수
-- PR은 최소 1명 리뷰 후 merge
-- 배포: `main` merge → Docker 이미지 빌드 → 스테이징 → 포털 탭 교체
-
----
-
-## 9. 환경 변수 규칙
-
-### 네이밍 컨벤션
-- Backend: `UPPERCASE_SNAKE_CASE`
-- Frontend: `NEXT_PUBLIC_` 접두사 (브라우저 노출 허용 변수만)
-
-### Backend 환경 변수
-
-| 변수 | 설명 | 개발 기본값 |
-|------|------|-------------|
-| `PORT` | 백엔드 포트 | `4000` |
-| `DATABASE_URL` | PostgreSQL 연결 | `postgresql://postgres:postgres@localhost:5432/chat_ki_s` |
-| `JWT_SECRET` | JWT 서명 키 | `dev-secret` (**프로덕션 반드시 변경**) |
-| `JWT_EXPIRES_IN` | 토큰 만료 | `7d` |
-| `AI_SERVICE_URL` | AI 서비스 URL | `http://localhost:8001` |
-| `AUTH_MODE` | 인증 모드 (`local`\|`portal`) | `local` |
-| `NODE_ENV` | 환경 | `development` |
-
-### Frontend 환경 변수
-
-| 변수 | 설명 | 개발 기본값 |
-|------|------|-------------|
-| `NEXT_PUBLIC_API_URL` | 백엔드 API URL | `http://localhost:4000` |
-
-### AI Service 환경 변수
-
-| 변수 | 설명 | 개발 기본값 |
-|------|------|-------------|
-| `OPENAI_API_KEY` | OpenAI API 키 | 필수 설정 |
-| `CHROMA_HOST` | ChromaDB URL | `http://localhost:8000` |
-| `LLM_MODEL` | LLM 모델 | `gpt-4o-mini` |
-| `LLM_TEMPERATURE` | LLM 온도 | `0.1` |
-| `LLM_MAX_TOKENS` | 최대 토큰 | `512` |
-| `CHUNK_SIZE` | 문서 청크 크기 | `1000` |
-| `CHUNK_OVERLAP` | 청크 오버랩 | `200` |
-| `TOP_K` | 검색 반환 수 | `5` |
-| `SCORE_THRESHOLD_HIGH` | 고신뢰 임계값 | `0.70` |
-| `SCORE_THRESHOLD_LOW` | 저신뢰 임계값 | `0.35` |
-
----
-
-## 10. 로컬 개발 실행
-
-```bash
-# 전체 스택 (Docker Compose)
-docker-compose up
-
-# 개별 실행
-npm run dev                         # frontend + backend 동시
-cd apps/ai && uvicorn main:app --reload --port 8001
-
-# 포트 요약
-# 3000 — Frontend (Next.js)
-# 4000 — Backend (Fastify)
-# 8001 — AI Service (FastAPI)
-# 8000 — ChromaDB
-# 5432 — PostgreSQL
-```
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /chat` | RAG + LLM 답변 |
+| `POST /chat/stream` | 스트리밍 응답 |
+| `POST /search` | 시맨틱 검색 |
+| `POST /documents/ingest` | 문서 업로드 → 벡터화 |
+| `POST /agent/execute` | Function Calling 실행 |
+| `POST /datahub/query` | 자연어→SQL 생성 + 검증 |
+| `POST /glossary/search` | 금융용어 검색 |
