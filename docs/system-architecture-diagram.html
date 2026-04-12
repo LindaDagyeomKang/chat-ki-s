@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat-Ki-S 시스템 아키텍처</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    padding: 40px 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1a1a2e;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 48px;
+  }
+
+  /* ── Flow arrow (vertical) ── */
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+  }
+  .arrow-down::after {
+    content: '';
+    width: 3px;
+    height: 36px;
+    background: #aaa;
+    display: block;
+    position: relative;
+  }
+  .arrow-down-head {
+    display: flex;
+    justify-content: center;
+    margin-top: -6px;
+    margin-bottom: 4px;
+  }
+  .arrow-down-head::after {
+    content: '';
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #aaa;
+  }
+
+  /* ── Section boxes ── */
+  .section {
+    border-radius: 16px;
+    padding: 28px 24px;
+    margin-bottom: 0;
+    position: relative;
+  }
+  .section-label {
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    background: #fff;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── Input ── */
+  .input-section {
+    background: #e8f4fd;
+    border: 2px solid #b3d9f2;
+    text-align: center;
+  }
+  .input-section .section-label { color: #2980b9; }
+  .input-box {
+    background: #3498db;
+    color: #fff;
+    padding: 18px 32px;
+    border-radius: 12px;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .input-box small {
+    display: block;
+    font-weight: 400;
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  /* ── Select (3 columns) ── */
+  .select-section {
+    background: #f0ebfa;
+    border: 2px solid #d1c4e9;
+  }
+  .select-section .section-label { color: #7c4dff; }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .select-card {
+    background: #7c4dff;
+    color: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .select-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .select-card p {
+    font-size: 12px;
+    opacity: 0.9;
+    line-height: 1.5;
+  }
+
+  /* ── Flow (3 column detail) ── */
+  .flow-section {
+    background: #faf0fc;
+    border: 2px solid #e1bee7;
+    min-height: 200px;
+  }
+  .flow-section .section-label { color: #9c27b0; }
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .flow-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .flow-box {
+    background: #ab47bc;
+    color: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  .flow-box small {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    opacity: 0.85;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .flow-box.detail {
+    background: #9c27b0;
+  }
+  .flow-arrow-down {
+    text-align: center;
+    color: #ab47bc;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  /* ── Tool list ── */
+  .tool-list-section {
+    background: #f3f0ff;
+    border: 2px solid #d1c4e9;
+    margin-top: -2px;
+    border-top: 1px dashed #d1c4e9;
+  }
+  .tool-list-section .section-label { color: #5e35b1; }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .tool-category {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #e0d6f2;
+  }
+  .tool-category h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #5e35b1;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #ede7f6;
+  }
+  .tool-category ul {
+    list-style: none;
+    font-size: 11px;
+    color: #555;
+    line-height: 1.8;
+  }
+  .tool-category ul li::before {
+    content: '>';
+    color: #7c4dff;
+    font-weight: 700;
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  /* ── Answer ── */
+  .answer-section {
+    background: #e8f5e9;
+    border: 2px solid #a5d6a7;
+    text-align: center;
+  }
+  .answer-section .section-label { color: #2e7d32; }
+  .answer-box {
+    background: #2e7d32;
+    color: #fff;
+    padding: 18px 32px;
+    border-radius: 12px;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .answer-box small {
+    display: block;
+    font-weight: 400;
+    font-size: 12px;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  /* ── Feedback ── */
+  .feedback-section {
+    background: #fff8e1;
+    border: 2px solid #ffe082;
+    text-align: center;
+  }
+  .feedback-section .section-label { color: #f57f17; }
+  .feedback-content {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .feedback-box {
+    background: #ff8f00;
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    max-width: 320px;
+  }
+  .feedback-box small {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .feedback-arrow {
+    display: flex;
+    align-items: center;
+    color: #ff8f00;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  /* ── ChromaDB detail sub-items ── */
+  .chroma-details {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.7;
+  }
+  .datahub-step-num {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ── PostgreSQL detail ── */
+  .pg-tables {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    margin-top: 36px;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #666;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+
+  .connector-line {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .connector-line .line {
+    width: 3px;
+    height: 28px;
+    background: #bbb;
+  }
+  .connector-line .head {
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid #bbb;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Chat-Ki-S  System Architecture</h1>
+  <p class="subtitle">Technical Flow Diagram</p>
+
+  <!-- ===== 1. INPUT ===== -->
+  <div class="section input-section">
+    <span class="section-label">INPUT</span>
+    <div class="input-box">
+      LLM 도구 선택 (OpenAI Function Calling)
+      <small>GPT-4o-mini가 사용자 질문을 분석하여 22개 도구 중 적절한 도구 자동 선택</small>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector-line"><div class="line"></div></div>
+  <div class="connector-line" style="padding:0;"><div class="head"></div></div>
+
+  <!-- ===== 2. SELECT ===== -->
+  <div class="section select-section">
+    <span class="section-label">SELECT</span>
+    <div class="three-col">
+      <div class="select-card">
+        <h3>A. 정형 데이터</h3>
+        <p>Function Calling 도구 22개<br>하드코딩된 SQL 쿼리로<br>PostgreSQL 즉시 실행</p>
+      </div>
+      <div class="select-card">
+        <h3>B. 비정형 데이터</h3>
+        <p>ChromaDB RAG<br>사내 문서/규정/가이드에서<br>의미 기반 벡터 검색</p>
+      </div>
+      <div class="select-card">
+        <h3>C. DataHub</h3>
+        <p>자연어 &rarr; SQL 변환<br>집계/분석/통계 등<br>기존 도구로 불가능한 질문</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector-line"><div class="line"></div></div>
+  <div class="connector-line" style="padding:0;"><div class="head"></div></div>
+
+  <!-- ===== 3. FLOW ===== -->
+  <div class="section flow-section">
+    <span class="section-label">FLOW</span>
+    <div class="flow-grid">
+
+      <!-- Column A: 정형 데이터 -->
+      <div class="flow-column">
+        <div class="flow-box">
+          PostgreSQL 16 즉시 실행
+          <small>Fastify 백엔드가 하드코딩된 쿼리 실행</small>
+          <div class="pg-tables">
+            <strong>관리 데이터 (12개 테이블):</strong><br>
+            users, employees(1,253명),<br>
+            mails, notices, calendar_events,<br>
+            leave_requests, expenses,<br>
+            assignments, documents,<br>
+            meeting_rooms, room_reservations,<br>
+            survey_questions, survey_responses
+          </div>
+        </div>
+      </div>
+
+      <!-- Column B: 비정형 데이터 -->
+      <div class="flow-column">
+        <div class="flow-box">
+          ChromaDB 벡터 검색
+          <div class="chroma-details">
+            <strong>임베딩:</strong> OpenAI text-embedding-3-small<br>
+            <strong>컬렉션:</strong> chat_ki_s_docs<br>
+            <strong>청크:</strong> 1,000자 (overlap 200자)<br>
+            <strong>검색:</strong> 코사인 유사도, Top-5 반환<br>
+            <strong>임계값:</strong><br>
+            &ge;0.70 고신뢰 &rarr; 바로 답변<br>
+            &ge;0.35 저신뢰 &rarr; 참고 답변<br>
+            &lt;0.35 &rarr; 폴백 응답
+          </div>
+        </div>
+        <div class="flow-arrow-down">&darr;</div>
+        <div class="flow-box" style="background:#8e24aa;">
+          문서 수집 파이프라인
+          <div class="chroma-details">
+            <strong>지원 형식:</strong> PDF, DOCX, TXT/MD<br>
+            <strong>처리:</strong> 텍스트 추출 &rarr; 청크 분할<br>
+            &rarr; 임베딩 변환 &rarr; ChromaDB 저장<br>
+            <strong>시드:</strong> FAQ 문서 25건 자동 인덱싱
+          </div>
+        </div>
+      </div>
+
+      <!-- Column C: DataHub -->
+      <div class="flow-column">
+        <div class="flow-box detail">
+          <span class="datahub-step-num">1</span> 메타데이터 참조
+          <small>12개 테이블의 스키마 로드<br>컬럼 설명 + FK 관계 + 샘플 쿼리<br>접근 금지 테이블 6개 제외<br>(feedback, conversations 등)</small>
+        </div>
+        <div class="flow-arrow-down">&darr;</div>
+        <div class="flow-box detail">
+          <span class="datahub-step-num">2</span> SQL 생성
+          <small><strong>GPT-4o-mini</strong> (temperature=0)<br>메타데이터+안전규칙을 system prompt로 전달<br>LLM이 PostgreSQL SELECT 쿼리 작성<br>응답 형식: "SQL: ... / 설명: ..."</small>
+        </div>
+        <div class="flow-arrow-down">&darr;</div>
+        <div class="flow-box detail">
+          <span class="datahub-step-num">3</span> 1차 검증 (AI 서비스)
+          <small><strong>Python FastAPI</strong> validate_sql()<br>- SELECT 시작 여부 확인<br>- 위험 키워드 10종 정규식 차단<br>&nbsp;&nbsp;(INSERT/UPDATE/DELETE/DROP 등)<br>- password_hash 컬럼 차단<br>- 제한 테이블 6개 접근 차단<br>- LIMIT 없으면 자동 추가 (20행)</small>
+        </div>
+        <div class="flow-arrow-down">&darr;</div>
+        <div class="flow-box detail">
+          <span class="datahub-step-num">4</span> 2차 검증 (Fastify 백엔드)
+          <small><strong>Node.js Fastify</strong> 서버에서 재검증<br>- SELECT 시작 재확인<br>- 위험 SQL 정규식 재검사<br>- 민감 컬럼(password_hash) 차단<br>- 인증된 사용자만 실행 (JWT)</small>
+        </div>
+        <div class="flow-arrow-down">&darr;</div>
+        <div class="flow-box detail">
+          <span class="datahub-step-num">5</span> PostgreSQL 실행
+          <small>검증 통과한 SELECT 쿼리 실행<br>결과 최대 20행 반환</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOOL LIST ===== -->
+  <div class="section tool-list-section">
+    <span class="section-label">22 TOOLS (Function Calling)</span>
+    <div class="tool-grid">
+      <div class="tool-category">
+        <h4>조회 (8개)</h4>
+        <ul>
+          <li>get_mails</li>
+          <li>get_leave_balance</li>
+          <li>get_expense_history</li>
+          <li>get_profile</li>
+          <li>get_schedule</li>
+          <li>get_notices</li>
+          <li>get_assignments</li>
+          <li>get_documents</li>
+        </ul>
+      </div>
+      <div class="tool-category">
+        <h4>검색 (6개)</h4>
+        <ul>
+          <li>search_employees</li>
+          <li>search_documents</li>
+          <li>search_glossary</li>
+          <li>check_leave_status</li>
+          <li>find_substitute</li>
+          <li>check_room_availability</li>
+        </ul>
+      </div>
+      <div class="tool-category">
+        <h4>실행 (5개)</h4>
+        <ul>
+          <li>submit_leave</li>
+          <li>submit_expense</li>
+          <li>add_calendar_event</li>
+          <li>book_room</li>
+          <li>draft_email</li>
+        </ul>
+      </div>
+      <div class="tool-category">
+        <h4>설문 (2개)</h4>
+        <ul>
+          <li>start_survey</li>
+          <li>submit_survey_answer</li>
+        </ul>
+      </div>
+      <div class="tool-category">
+        <h4>DB 조회 (1개)</h4>
+        <ul>
+          <li>query_db</li>
+        </ul>
+        <div style="margin-top:8px;font-size:10px;color:#888;line-height:1.5;">
+          집계/통계 등<br>다른 도구로 불가한<br>질문 처리
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector-line"><div class="line"></div></div>
+  <div class="connector-line" style="padding:0;"><div class="head"></div></div>
+
+  <!-- ===== 4. ANSWER ===== -->
+  <div class="section answer-section">
+    <span class="section-label">ANSWER</span>
+    <div class="answer-box">
+      LLM 자연어 답변 생성 (GPT-4o-mini)
+      <small>조회/검색 결과를 한국어 자연어로 변환하여 사용자에게 전달</small>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector-line"><div class="line"></div></div>
+  <div class="connector-line" style="padding:0;"><div class="head"></div></div>
+
+  <!-- ===== 5. FEEDBACK ===== -->
+  <div class="section feedback-section">
+    <span class="section-label">FEEDBACK LOOP</span>
+    <div class="feedback-content">
+      <div class="feedback-box">
+        사용자에게 표시 + 피드백 수집
+        <small>
+          사용자가 답변에 대해 평가<br>
+          "도움 됐어요" / "도움 안 됐어요" 선택
+        </small>
+      </div>
+      <div class="feedback-arrow">&rarr;</div>
+      <div class="feedback-box" style="background:#ef6c00;">
+        PostgreSQL 저장
+        <small>
+          <strong>feedback 테이블:</strong> rating + comment 저장<br><br>
+          <strong>good_answers 테이블:</strong><br>
+          "도움 됐어요" 시 질문+답변 쌍 자동 저장<br>
+          &rarr; 향후 답변 품질 개선 학습 데이터로 활용
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LEGEND ===== -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3498db;"></div>
+      <span>LLM 처리 (GPT-4o-mini)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#7c4dff;"></div>
+      <span>데이터 소스 분기</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#ab47bc;"></div>
+      <span>처리 흐름</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#2e7d32;"></div>
+      <span>답변 생성</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#ff8f00;"></div>
+      <span>피드백 수집</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

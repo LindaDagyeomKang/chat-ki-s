@@ -50,3 +50,4 @@ venv/
 # ChromaDB data
 chroma_data/
 
+apps/frontend/public/cl/
