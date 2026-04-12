@@ -23,6 +23,18 @@ export default function KnowledgePage() {
     fetchDocs()
   }, [])
 
+  // 멘토가 아니면 접근 차단
+  if (userRole && userRole !== 'mentor') {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2" style={{ color: '#111547' }}>접근 권한이 없습니다</p>
+          <p className="text-sm" style={{ color: '#94A3B8' }}>지식관리는 멘토 계정만 이용할 수 있습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
   async function fetchDocs() {
     try {
       const token = localStorage.getItem('token')

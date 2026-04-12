@@ -13,11 +13,15 @@ const TOP_NAV = [
   { href: '/intranet/mails', label: '전자우편' },
   { href: '/intranet/notices', label: '게시판' },
   { href: '/intranet/hr', label: '인사시스템' },
+]
+
+const TOP_NAV_MENTEE = [
   { href: '/intranet/onboarding', label: '챗키스' },
 ]
 
 const TOP_NAV_MENTOR = [
   { href: '/intranet/approvals', label: '승인대기' },
+  { href: '/intranet/knowledge', label: '지식관리' },
 ]
 
 function IntranetLayoutInner({ children }: { children: React.ReactNode }) {
@@ -71,7 +75,7 @@ function IntranetLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (!ready) return null
 
-  const allNav = [...TOP_NAV, ...(userRole === 'mentor' ? TOP_NAV_MENTOR : [])]
+  const allNav = [...TOP_NAV, ...(userRole === 'mentor' ? TOP_NAV_MENTOR : TOP_NAV_MENTEE)]
 
   return (
     <div className="flex flex-col h-screen" style={{ background: '#F1F3F6', fontFamily: 'Pretendard, -apple-system, Roboto, Helvetica, sans-serif' }}>
