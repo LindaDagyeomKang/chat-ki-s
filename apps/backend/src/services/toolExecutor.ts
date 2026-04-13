@@ -70,7 +70,7 @@ export async function executeTool(
       const rows = await db.select().from(mails)
         .where(and(...conditions))
         .orderBy(desc(mails.receivedAt))
-        .limit(10)
+        .limit(50)
 
       // 발신자/키워드 필터 (from_text에서)
       let filtered = rows
@@ -89,7 +89,7 @@ export async function executeTool(
           const recent = await db.select().from(mails)
             .where(eq(mails.toId, userId))
             .orderBy(desc(mails.receivedAt))
-            .limit(5)
+            .limit(10)
           if (recent.length > 0) {
             const list = recent.map((m: any, i: number) => {
               const date = new Date(m.receivedAt)
