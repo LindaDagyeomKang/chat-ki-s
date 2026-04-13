@@ -388,7 +388,9 @@ export async function executeTool(
 
       if (conditions.length === 0) return { result: '검색할 이름, 부서, 또는 업무 키워드를 알려주세요.' }
 
-      const whereClause = name && conditions.length > 1 ? and(...conditions) : conditions.length > 1 ? or(...conditions) : conditions[0]
+      // department+rank 조합이면 AND, 이름 포함 다중 조건도 AND, 나머지(topic 등 단독 OR)는 OR
+      const useAnd = (name && conditions.length > 1) || (department && searchRank)
+      const whereClause = useAnd ? and(...conditions) : conditions.length > 1 ? or(...conditions) : conditions[0]
       let rows = await db.select().from(employees).where(whereClause)
         .orderBy(sql`CASE WHEN position IS NOT NULL AND position != '-' THEN 0 ELSE 1 END`)
         .limit(10)
