@@ -260,7 +260,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "check_room_availability",
-            "description": "회의실 예약 가능 여부를 확인합니다. '회의실 비어있어?', '내일 대회의실 예약 가능해?' 등의 질문에 사용합니다.",
+            "description": "회의실 예약 가능 여부 및 회의실 정보(수용 인원, 위치 등)를 확인합니다. '회의실 비어있어?', '내일 대회의실 예약 가능해?', '대회의실 몇 명?', '회의실 수용 인원' 등의 질문에 사용합니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -423,7 +423,7 @@ SYSTEM_PROMPT = """\
   - get_schedule: 일정 조회
   - add_calendar_event: 일정 추가
   - delete_calendar_event: 일정 삭제
-  - check_room_availability: 회의실 현황
+  - check_room_availability: 회의실 현황/수용인원/위치 확인
   - book_room: 회의실 예약
 
 👤 인사/근태

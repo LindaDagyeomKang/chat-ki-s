@@ -126,7 +126,11 @@ KEYWORD_MAP: dict[str, str] = {
     "급여": "benefits",
     "연봉": "benefits",
     "월급": "benefits",
-    "식대": "benefits",
+    "식대": "guide_card",
+    "식비": "guide_card",
+    "식비 한도": "guide_card",
+    "야근 식대": "guide_card",
+    "회의비": "guide_card",
     "교통비": "benefits",
     "통신비": "benefits",
 
