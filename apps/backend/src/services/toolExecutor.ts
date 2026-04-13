@@ -371,14 +371,10 @@ export async function executeTool(
       const conditions: any[] = []
       if (name) conditions.push(ilike(employees.name, `%${name}%`))
       if (department) {
-        // "팀장" 검색 시 position 필드도 함께 검색
-        const deptClean = department.replace(/\s*(팀장|본부장)\s*/g, '').trim()
-        const isLeaderSearch = department.includes('팀장') || department.includes('본부장')
+        // department에서 직급/직책 키워드 제거하고 순수 부서명만 추출
+        const deptClean = department.replace(/\s*(팀장|본부장|사장|부사장|전무|상무|이사|부장|차장|과장|대리|주임|사원)\s*/g, '').trim()
         if (deptClean) {
           conditions.push(or(ilike(employees.team, `%${deptClean}%`), ilike(employees.division, `%${deptClean}%`)))
-        }
-        if (isLeaderSearch) {
-          conditions.push(or(eq(employees.position, '팀장'), eq(employees.position, '본부장')))
         }
       }
       if (topic) conditions.push(or(ilike(employees.duty, `%${topic}%`), ilike(employees.team, `%${topic}%`)))
