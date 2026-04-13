@@ -1,9 +1,41 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
-import { leaveRequests } from '../db/schema'
-import { desc, eq } from 'drizzle-orm'
+import { leaveRequests, users, employees } from '../db/schema'
+import { and, desc, eq, gte } from 'drizzle-orm'
 
 export async function leaveRoutes(app: FastifyInstance) {
+  // 연차 잔여일 조회
+  app.get('/api/leaves/balance', { preHandler: [app.authenticate] }, async (request) => {
+    const { sub } = request.user as { sub: string }
+
+    const user = (await db.select().from(users).where(eq(users.id, sub)).limit(1))[0]
+    const emp = user ? (await db.select().from(employees).where(eq(employees.name, user.name)).limit(1))[0] : null
+
+    // 총 연차 계산 (입사일 기반)
+    let totalDays = 11
+    if (emp?.joinDate) {
+      const years = (Date.now() - new Date(emp.joinDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      if (years >= 1) totalDays = Math.min(15 + Math.floor(years / 2), 25)
+    }
+
+    // 올해 사용 일수
+    const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]
+    const usedLeaves = await db.select().from(leaveRequests)
+      .where(and(eq(leaveRequests.userId, sub), gte(leaveRequests.startDate, yearStart)))
+
+    const usedDays = usedLeaves.reduce((sum, l) => {
+      if (l.leaveType === 'half_am' || l.leaveType === 'half_pm') return sum + 0.5
+      return sum + 1
+    }, 0)
+
+    const approvedDays = usedLeaves.filter(l => l.status === 'approved').reduce((sum, l) => {
+      if (l.leaveType === 'half_am' || l.leaveType === 'half_pm') return sum + 0.5
+      return sum + 1
+    }, 0)
+
+    return { totalDays, usedDays, approvedDays, remainingDays: totalDays - usedDays }
+  })
+
   // 내 연차 목록 조회
   app.get('/api/leaves', { preHandler: [app.authenticate] }, async (request) => {
     const { sub } = request.user as { sub: string }

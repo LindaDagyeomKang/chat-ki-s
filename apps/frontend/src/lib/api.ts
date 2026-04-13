@@ -190,6 +190,10 @@ export async function getLeaves(): Promise<LeaveRequest[]> {
   return apiFetch<LeaveRequest[]>('/api/leaves')
 }
 
+export async function getLeaveBalance(): Promise<{ totalDays: number; usedDays: number; approvedDays: number; remainingDays: number }> {
+  return apiFetch('/api/leaves/balance')
+}
+
 export async function createLeave(data: { leaveType: string; startDate: string; endDate: string; reason?: string }): Promise<LeaveRequest> {
   return apiFetch<LeaveRequest>('/api/leaves', { method: 'POST', body: JSON.stringify(data) })
 }

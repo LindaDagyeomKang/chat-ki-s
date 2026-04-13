@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getLeaves, getExpenses } from '@/lib/api'
+import { getLeaves, getLeaveBalance, getExpenses } from '@/lib/api'
 import type { LeaveRequest, Expense } from '@/lib/api'
 import { usePageContext } from '@/contexts/PageContext'
 import IntranetSidebar from '@/components/IntranetSidebar'
@@ -25,11 +25,13 @@ export default function HRPage() {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [teamEvents, setTeamEvents] = useState<TeamEvent[]>([])
+  const [leaveTotal, setLeaveTotal] = useState(11)
   const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() } })
   const { setPageContext } = usePageContext()
 
   useEffect(() => {
     getLeaves().then(setLeaves).catch(() => {})
+    getLeaveBalance().then(b => setLeaveTotal(b.totalDays)).catch(() => {})
     getExpenses().then(setExpenses).catch(() => {})
     // 팀원 근태/일정 조회
     fetchTeamEvents()
@@ -106,7 +108,7 @@ export default function HRPage() {
             <div className="flex-1 p-6 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32, borderTop: '4px solid #E1007F' }}>
               <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>잔여 연차</span>
               <div className="flex items-end gap-1">
-                <span style={{ color: '#111547', fontSize: 36, fontFamily: 'Manrope', fontWeight: 800 }}>{Math.max(0, 15 - approvedCount)}</span>
+                <span style={{ color: '#111547', fontSize: 36, fontFamily: 'Manrope', fontWeight: 800 }}>{Math.max(0, leaveTotal - approvedCount)}</span>
                 <span style={{ color: '#111547', fontSize: 14, marginBottom: 6 }}>일</span>
               </div>
             </div>
