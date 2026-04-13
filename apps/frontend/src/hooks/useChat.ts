@@ -221,6 +221,7 @@ export function useChat(): UseChatReturn {
     messages,
     setMessages,
     conversationId,
+    setConversationId,
     sending,
     pageContextRef,
     handleSend,

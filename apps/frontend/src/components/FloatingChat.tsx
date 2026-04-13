@@ -117,10 +117,15 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
         localStorage.removeItem('chat-ki-s:mission-chat')
         setIsOpen(true)
 
+        // 새 대화로 시작
         const setMessages = (chat as any).setMessages
+        const setConversationId = (chat as any).setConversationId
         if (typeof setMessages === 'function') {
+          if (typeof setConversationId === 'function') {
+            setConversationId(undefined)
+          }
           setTimeout(() => {
-            setMessages((prev: any[]) => [...prev, {
+            setMessages([{
               id: crypto.randomUUID(),
               conversationId: '',
               role: 'assistant' as const,
