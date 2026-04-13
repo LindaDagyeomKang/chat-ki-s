@@ -213,6 +213,22 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "delete_calendar_event",
+            "description": "캘린더에서 일정을 삭제합니다. 특정 날짜의 일정을 삭제할 때 사용합니다. 삭제 전 반드시 get_schedule로 해당 날짜 일정을 먼저 조회하여 사용자에게 어떤 일정을 삭제할지 확인하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "eventDate": {"type": "string", "description": "삭제할 일정의 날짜 (YYYY-MM-DD)"},
+                    "title": {"type": "string", "description": "삭제할 일정의 제목 (정확히 일치해야 함)"},
+                    "index": {"type": "integer", "description": "같은 날 여러 일정 중 몇 번째를 삭제할지 (1부터 시작, 선택)"},
+                },
+                "required": ["eventDate"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "start_survey",
             "description": "온보딩 설문조사를 시작합니다. 사용자가 설문 메일의 링크를 클릭했거나 '설문 시작'을 요청했을 때 사용합니다.",
             "parameters": {
@@ -395,7 +411,9 @@ SYSTEM_PROMPT = """\
 - 다른 도구로 해결 안 되는 DB 조회/통계/집계 질문 → query_db 호출 (예: "이번 달 경비 총액", "팀별 인원수")
 - 금융 용어/개념 질문 → search_glossary 호출
 - 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)
+- 일정 삭제 → delete_calendar_event 호출. 삭제 전 반드시 get_schedule로 먼저 조회하여 사용자에게 확인받을 것.
 - ⚠️ "캘린더에 추가해줘", "일정 등록해줘" = add_calendar_event (submit_leave 아님)
+- ⚠️ 일정 삭제를 실행하지 않고 "삭제했습니다"라고 답변하지 마세요. 반드시 delete_calendar_event를 호출하세요.
 - 설문조사 → start_survey로 시작, 질문 하나씩 진행, submit_survey_answer로 답변 수집
 - 보도자료/뉴스/IR 질문 → 도구 호출하지 말고 "보도자료는 현재 시스템에서 제공하지 않습니다. 키움증권 홈페이지를 확인해 주세요." 안내
 - 잡담/인사 → 도구 없이 직접 답변

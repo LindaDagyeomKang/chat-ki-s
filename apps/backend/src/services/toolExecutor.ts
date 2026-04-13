@@ -515,6 +515,38 @@ export async function executeTool(
       return { result: `"${title}" 일정이 ${dateStr}에 캘린더에 추가되었습니다.${location ? ` (장소: ${location})` : ''}` }
     }
 
+    case 'delete_calendar_event': {
+      const { eventDate, title: eventTitle, index } = args
+      if (!eventDate) return { result: '삭제할 일정의 날짜를 알려주세요.' }
+
+      // 해당 날짜의 내 일정 조회
+      const events = await db.select().from(calendarEvents)
+        .where(and(eq(calendarEvents.userId, userId), eq(calendarEvents.eventDate, eventDate)))
+        .orderBy(asc(calendarEvents.startTime))
+
+      if (events.length === 0) return { result: `${eventDate}에 등록된 일정이 없습니다.` }
+
+      // 삭제 대상 결정
+      let target: any = null
+      if (eventTitle) {
+        target = events.find((e: any) => e.title === eventTitle || e.title.includes(eventTitle))
+      }
+      if (!target && index && index >= 1 && index <= events.length) {
+        target = events[index - 1]
+      }
+      if (!target && events.length === 1) {
+        target = events[0]
+      }
+
+      if (!target) {
+        const list = events.map((e: any, i: number) => `${i + 1}. ${e.startTime}${e.endTime ? `~${e.endTime}` : ''} ${e.title}`).join('\n')
+        return { result: `${eventDate}에 일정이 ${events.length}건 있습니다. 어떤 일정을 삭제할까요?\n${list}` }
+      }
+
+      await db.delete(calendarEvents).where(eq(calendarEvents.id, target.id))
+      return { result: `"${target.title}" (${eventDate} ${target.startTime}) 일정이 삭제되었습니다.` }
+    }
+
     case 'submit_leave': {
       const { leaveType, startDate, endDate, reason } = args
       const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
