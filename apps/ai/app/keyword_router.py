@@ -38,6 +38,8 @@ CATEGORY_DOCS: dict[str, list[str]] = {
     "guide_vehicle": ["법인차량_사용_및_관리_지침서.md"],
     "guide_pc": ["신입사원_업무용_PC_프로그램_설치_및_세팅_가이드.md"],
     "guide_it": ["신입사원_IT_시스템_및_인프라_권한_신청_가이드.md"],
+    # 맛집
+    "food": [f for f in __import__('os').listdir(str(_LOCAL_SEED if _LOCAL_SEED.exists() else _DOCKER_SEED)) if f.startswith("맛집_")],
     # 부문별 실무지침서
     "dept_ict": ["dept_ICT부문.md"],
     "dept_stm": ["dept_S_T Market부문.md"],
@@ -63,6 +65,17 @@ CATEGORY_DOCS: dict[str, list[str]] = {
 # 키워드 → 카테고리 매핑 테이블
 # ──────────────────────────────────────────────
 KEYWORD_MAP: dict[str, str] = {
+    # === 맛집/점심 ===
+    "맛집": "food",
+    "점심": "food",
+    "저녁": "food",
+    "뭐 먹": "food",
+    "먹을": "food",
+    "식당": "food",
+    "카페": "food",
+    "추천해": "food",
+    "밥": "food",
+    "여의도 맛집": "food",
     # === 휴가/연차 ===
     "연차": "vacation",
     "휴가": "vacation",
