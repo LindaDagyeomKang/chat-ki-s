@@ -105,7 +105,7 @@ export default function OnboardingPage() {
           message: chatMsg,
           timestamp: Date.now(),
         }))
-        window.dispatchEvent(new Event('mission-chat'))
+        window.dispatchEvent(new Event('storage'))
       }
       return updated
     })
