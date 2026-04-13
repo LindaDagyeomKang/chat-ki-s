@@ -18,6 +18,7 @@ types.setTypeParser(TIMESTAMP_OID, (val: string) => {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   options: '-c timezone=UTC',
+  max: 20,
 })
 
 export const db = drizzle(pool, { schema })
