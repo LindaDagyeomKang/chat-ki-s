@@ -176,6 +176,9 @@ export async function conversationRoutes(app: FastifyInstance) {
     let agentAction: { action: string; params: Record<string, unknown>; confirmationMessage: string } | undefined
     const suggestedQuestions: string[] = []
     const ragSources: { title: string; url?: string; excerpt?: string }[] = []
+    const startTime = Date.now()
+    let promptTokens: number | undefined
+    let completionTokens: number | undefined
 
     try {
       const { executeTool } = require('../services/toolExecutor')
@@ -325,7 +328,11 @@ export async function conversationRoutes(app: FastifyInstance) {
           assistantContent = toolsBody.answer || ''
         }
 
-        // agent_logs 제거됨 — good_answers로 대체
+        // 토큰 사용량 기록
+        if (toolsBody.usage) {
+          promptTokens = toolsBody.usage.prompt_tokens
+          completionTokens = toolsBody.usage.completion_tokens
+        }
       }
     } catch (err) {
       // Function calling 실패 시 기존 RAG fallback
@@ -351,9 +358,10 @@ export async function conversationRoutes(app: FastifyInstance) {
     }
 
     // Save assistant message
+    const responseTimeMs = Date.now() - startTime
     const asstMsgResult = await db
       .insert(messages)
-      .values({ conversationId, role: 'assistant', content: assistantContent })
+      .values({ conversationId, role: 'assistant', content: assistantContent, responseTimeMs, promptTokens, completionTokens })
       .returning()
 
     const asstMessage = asstMsgResult[0]

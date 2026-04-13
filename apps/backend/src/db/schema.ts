@@ -40,6 +40,9 @@ export const messages = pgTable('messages', {
   conversationId: uuid('conversation_id').notNull().references(() => conversations.id),
   role: varchar('role', { length: 20 }).notNull(), // 'user' | 'assistant'
   content: text('content').notNull(),
+  responseTimeMs: integer('response_time_ms'),
+  promptTokens: integer('prompt_tokens'),
+  completionTokens: integer('completion_tokens'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
