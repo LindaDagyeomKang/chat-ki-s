@@ -21,6 +21,36 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["tools_chat"])
 
 
+def _build_context_hint(history: list) -> str:
+    """최근 히스토리에서 대화 맥락 힌트를 추출한다.
+    assistant 응답에서 어떤 데이터를 다뤘는지 간략히 요약."""
+    if not history:
+        return ""
+
+    hints = []
+    for i, h in enumerate(history):
+        if h.role != "assistant" or not h.content:
+            continue
+        content = h.content[:300]  # 앞부분만 분석
+        # 메일 관련 응답 감지
+        if any(kw in content for kw in ["메일", "편지", "수신", "발신", "RE:", "제목:"]):
+            # 바로 앞 user 메시지에서 주제 추출
+            user_msg = history[i - 1].content if i > 0 and history[i - 1].role == "user" else ""
+            hints.append(f"- 직전에 메일 관련 조회를 수행함 (질문: {user_msg[:60]})")
+        elif any(kw in content for kw in ["일정", "캘린더", "킥오프", "회의"]):
+            user_msg = history[i - 1].content if i > 0 and history[i - 1].role == "user" else ""
+            hints.append(f"- 직전에 일정/캘린더 관련 조회를 수행함 (질문: {user_msg[:60]})")
+        elif any(kw in content for kw in ["연차", "휴가", "반차"]):
+            hints.append("- 직전에 연차/휴가 관련 조회를 수행함")
+        elif any(kw in content for kw in ["경비", "정산", "품의"]):
+            hints.append("- 직전에 경비/정산 관련 조회를 수행함")
+        elif any(kw in content for kw in ["임직원", "직원", "팀원", "담당자"]):
+            hints.append("- 직전에 임직원 검색을 수행함")
+
+    # 마지막 힌트만 (가장 최근 맥락)
+    return hints[-1] if hints else ""
+
+
 class HistoryMessage(BaseModel):
     role: str
     content: str
@@ -61,7 +91,11 @@ async def tools_chat(body: ToolsChatRequest):
     if body.userContext:
         user_info = f"\n\n## 현재 사용자 정보\n- 현재 사용자: {body.userContext}\n- '우리 팀', '우리 부서', '내 팀' 등의 표현은 이 사용자의 소속을 기준으로 해석하세요."
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT + date_context + user_info}]
+    # 히스토리에서 이전 대화 맥락 힌트 생성
+    context_hint = _build_context_hint(body.history[-8:])
+    context_section = f"\n\n## 이전 대화 맥락\n{context_hint}\n- 후속 질문이 이 맥락과 관련될 수 있으니 참고하되, 질문 의도가 명확히 다르면 무시하세요." if context_hint else ""
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + date_context + user_info + context_section}]
 
     # 히스토리
     for h in body.history[-8:]:
