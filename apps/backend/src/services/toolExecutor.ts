@@ -356,7 +356,8 @@ export async function executeTool(
       }
 
       // 직급 검색 (팀장/본부장은 position 필드에서 검색)
-      if (searchRank) {
+      // department와 함께 있으면 아래 조건 조합으로 처리
+      if (searchRank && !department) {
         let rows
         if (searchRank === '팀장' || searchRank === '본부장') {
           rows = await db.select().from(employees).where(eq(employees.position, searchRank)).limit(10)
@@ -381,6 +382,13 @@ export async function executeTool(
         }
       }
       if (topic) conditions.push(or(ilike(employees.duty, `%${topic}%`), ilike(employees.team, `%${topic}%`)))
+      if (searchRank && department) {
+        if (searchRank === '팀장' || searchRank === '본부장') {
+          conditions.push(eq(employees.position, searchRank))
+        } else {
+          conditions.push(eq(employees.rank, searchRank))
+        }
+      }
 
       if (conditions.length === 0) return { result: '검색할 이름, 부서, 또는 업무 키워드를 알려주세요.' }
 
