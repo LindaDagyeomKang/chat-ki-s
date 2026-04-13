@@ -138,11 +138,12 @@ export async function executeTool(
       }
 
       const typeLabels: Record<string, string> = { annual: '연차', half_am: '오전반차', half_pm: '오후반차', sick: '병가', special: '특별휴가' }
+      const pendingCount = usedLeaves.filter(l => l.status === 'pending').length
       const history = usedLeaves.length > 0
         ? '\n\n사용 내역:\n' + usedLeaves.map((l, i) => `${i + 1}. ${l.startDate} ${typeLabels[l.leaveType] ?? l.leaveType} (${l.status === 'approved' ? '승인' : l.status === 'pending' ? '대기중' : l.status})`).join('\n')
         : ''
 
-      return { result: `${ctx.userName}님 연차 현황:\n• 총 연차: ${totalDays}일\n• 사용: ${usedDays}일\n• 잔여: ${totalDays - usedDays}일${history}` }
+      return { result: `${ctx.userName}님 연차 현황:\n• 총 연차: ${totalDays}일\n• 사용: ${usedDays}일\n• 잔여: ${totalDays - usedDays}일\n• 승인 대기: ${pendingCount}건${history}` }
     }
 
     case 'get_expense_history': {
