@@ -21,7 +21,7 @@ TOOLS = [
                     },
                     "sender": {
                         "type": "string",
-                        "description": "특정 발신자 이름으로 필터 (선택)"
+                        "description": "특정 발신자 이름으로 필터 (선택). 직급 없이 이름만 입력 (예: '제민재')"
                     },
                     "keyword": {
                         "type": "string",

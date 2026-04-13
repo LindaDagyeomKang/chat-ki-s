@@ -71,7 +71,9 @@ export async function executeTool(
       // 발신자/키워드 필터 (from_text에서)
       let filtered = rows
       if (sender) {
-        filtered = filtered.filter((m: any) => m.fromText?.includes(sender))
+        // 직급 제거하고 이름만 추출 (예: "제민재 과장" → "제민재")
+        const senderName = sender.replace(/\s*(사장|부사장|전무|상무|이사|부장|차장|과장|대리|주임|사원|팀장|본부장)\s*/g, '').trim()
+        filtered = filtered.filter((m: any) => m.fromText?.includes(senderName))
       }
       if (keyword) {
         filtered = filtered.filter((m: any) => m.subject?.includes(keyword) || m.body?.includes(keyword))
