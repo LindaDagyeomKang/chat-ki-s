@@ -1,28 +1,27 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db'
-import { documents } from '../db/schema'
-import { eq, ilike, or, desc } from 'drizzle-orm'
+import { documents, users } from '../db/schema'
+import { eq, ilike, or, and, desc } from 'drizzle-orm'
 
 export async function documentRoutes(app: FastifyInstance) {
-  // 결재함 목록 조회
-  app.get('/api/documents', async (req, _reply) => {
+  // 결재함 목록 조회 (본인 팀 문서만)
+  app.get('/api/documents', { preHandler: [app.authenticate] }, async (req, _reply) => {
+    const payload = req.user as { sub: string }
+    const userRow = await db.select().from(users).where(eq(users.id, payload.sub)).limit(1)
+    const userDept = userRow[0]?.department || ''
+
+    const conditions: any[] = []
+    if (userDept) {
+      conditions.push(ilike(documents.author, `%${userDept}%`))
+    }
+
     const { category, q } = req.query as { category?: string; q?: string }
-    let query = db.select().from(documents).orderBy(desc(documents.submittedAt))
+    if (category) conditions.push(eq(documents.category, category))
+    if (q) conditions.push(or(ilike(documents.title, `%${q}%`), ilike(documents.content, `%${q}%`), ilike(documents.author, `%${q}%`)))
 
-    if (category) {
-      query = query.where(eq(documents.category, category)) as typeof query
-    }
-    if (q) {
-      query = query.where(
-        or(
-          ilike(documents.title, `%${q}%`),
-          ilike(documents.content, `%${q}%`),
-          ilike(documents.author, `%${q}%`)
-        )
-      ) as typeof query
-    }
-
-    const rows = await query
+    const rows = await db.select().from(documents)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(documents.submittedAt))
     return rows
   })
 
