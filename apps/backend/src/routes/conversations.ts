@@ -233,16 +233,17 @@ export async function conversationRoutes(app: FastifyInstance) {
             if (ragRes.ok) {
               const ragBody = await ragRes.json() as any
               let ragContent = ragBody.answer || '관련 문서를 찾지 못했습니다.'
-              // 출처 정보를 텍스트에 포함 + sources 배열에 저장
+              // 출처 정보를 텍스트에 포함 + sources 배열에 저장 (맛집 제외)
               if (ragBody.sources?.length > 0) {
-                const sourceNames = ragBody.sources
+                const nonFoodSources = ragBody.sources.filter((s: any) => !s.source?.startsWith('맛집'))
+                const sourceNames = nonFoodSources
                   .map((s: any) => s.source?.replace('.md', '').replace(/_/g, ' '))
                   .filter((s: any, i: number, arr: any[]) => s && arr.indexOf(s) === i)
                 if (sourceNames.length > 0) {
                   ragContent += `\n📄 출처: ${sourceNames.join(', ')}`
                 }
                 // 프론트 출처 카드용 데이터 저장
-                for (const s of ragBody.sources) {
+                for (const s of nonFoodSources) {
                   const title = s.source?.replace('.md', '').replace(/_/g, ' ') || ''
                   if (title && !ragSources.find(rs => rs.title === title)) {
                     ragSources.push({ title })
