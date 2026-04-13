@@ -634,9 +634,10 @@ export async function executeTool(
         fixedDate = `${currentYear}-${fixedDate.split('-').slice(1).join('-')}`
       }
 
-      // 회의실 찾기
+      // 회의실 찾기 (공백 무시 매칭)
       const allRooms = await db.select().from(meetingRooms)
-      const room = allRooms.find((r: any) => r.name.includes(bookRoomName))
+      const normalizedInput = bookRoomName.replace(/\s/g, '')
+      const room = allRooms.find((r: any) => r.name.replace(/\s/g, '').includes(normalizedInput) || normalizedInput.includes(r.name.replace(/\s/g, '')))
       if (!room) return { result: `"${bookRoomName}" 회의실을 찾을 수 없습니다. 등록된 회의실: ${allRooms.map((r: any) => r.name).join(', ')}` }
 
       // 충돌 검사
