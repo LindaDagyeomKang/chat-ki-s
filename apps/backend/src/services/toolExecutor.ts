@@ -14,6 +14,8 @@ interface ToolContext {
   userDivision: string | null
   userRank: string | null
   userTeam: string | null
+  userEmail: string | null
+  userPhone: string | null
 }
 
 async function getUserContext(userId: string): Promise<ToolContext> {
@@ -21,15 +23,19 @@ async function getUserContext(userId: string): Promise<ToolContext> {
   let division: string | null = null
   let rank: string | null = null
   let team: string | null = null
+  let userEmail: string | null = null
+  let userPhone: string | null = null
   if (user) {
     const emp = (await db.select().from(employees).where(eq(employees.name, user.name)).limit(1))[0]
     if (emp) {
       division = emp.division
       rank = emp.rank
       team = emp.team
+      userEmail = emp.email
+      userPhone = emp.phone
     }
   }
-  return { userId, userName: user?.name || null, userDivision: division, userRank: rank, userTeam: team }
+  return { userId, userName: user?.name || null, userDivision: division, userRank: rank, userTeam: team, userEmail, userPhone }
 }
 
 export async function executeTool(
@@ -617,9 +623,9 @@ export async function executeTool(
 - 수신/참조: [수신: ○○ 귀하 / 참조: △△ 귀하]
 - 서명: 키움증권 [부서명] [이름] [직함] / T. 내선번호 | E. 이메일`
 
-      // 유저 프로필 정보
+      // 유저 프로필 정보 (이메일/내선번호 포함)
       const dept = senderDept || ctx.userTeam || ctx.userDivision || ''
-      const senderInfo = `발신자: ${ctx.userName || ''} (${dept})`
+      const senderInfo = `발신자: ${ctx.userName || ''} (${dept})\n이메일: ${ctx.userEmail || ''}\n내선번호: ${ctx.userPhone || ''}`
 
       const prompt = `${EMAIL_GUIDE}\n\n${senderInfo}\n수신자: ${recipient || '(미지정)'}\n${cc ? `참조: ${cc}\n` : ''}용건: ${subject}\n상세 내용: ${details}`
 
