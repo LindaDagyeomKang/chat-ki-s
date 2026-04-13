@@ -326,7 +326,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_documents",
-            "description": "사내 문서(규정, 가이드, 매뉴얼 등)에서 정보를 검색합니다. 회사 정책, 절차, 복리후생, PC 세팅 등의 질문에 사용합니다.",
+            "description": "사내 지식베이스(규정, 가이드, 매뉴얼)에서 RAG 검색합니다. 연차 규정, 법인카드 기준, PC 세팅 방법, 복리후생 등 회사 정책/절차 질문에 사용합니다. ⚠️ 결재함/보고서 조회는 get_approvals, 맛집/식당은 search_restaurant를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -339,8 +339,8 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "get_documents",
-            "description": "결재함에서 보고서/기안 문서를 조회합니다. 업무 결재 상태 확인, 보고서 내용 검색, 보고서 양식 참고 등에 사용합니다. '미결재 문서', '승인된 보고서', 'AB테스트 보고서 찾아줘' 같은 요청에 사용하세요.",
+            "name": "get_approvals",
+            "description": "결재함에서 보고서/기안 문서를 조회합니다. 업무 결재 상태 확인, 보고서 내용 검색, 보고서 양식 참고 등에 사용합니다. '미결재 문서', '승인된 보고서', 'AB테스트 보고서 찾아줘' 같은 요청에 사용하세요. ⚠️ 사내 규정/정책 검색은 search_documents를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -377,6 +377,20 @@ TOOLS = [
                     },
                 },
                 "required": ["question"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_restaurant",
+            "description": "여의도 주변 맛집/식당/카페를 검색합니다. 점심 추천, 회식 장소, 카페 추천, 전화번호 등 음식점 관련 질문에 사용합니다. '오늘 점심 뭐 먹지?', '한우 맛집', '회식 장소 추천' 같은 요청에 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "검색 키워드 (음식 종류, 분위기, 식당명 등)"},
+                },
+                "required": ["query"],
             },
         },
     },
@@ -422,12 +436,15 @@ SYSTEM_PROMPT = """\
 💰 경비/결재
   - get_expense_history: 경비 내역
   - submit_expense: 경비 정산 신청
-  - get_documents: 결재함/보고서 조회
+  - get_approvals: 결재함/보고서 조회
 
 📚 지식/검색
-  - search_documents: 사내 문서 검색 (규정, 가이드, 맛집 등)
+  - search_documents: 사내 문서 검색 (규정, 가이드, 매뉴얼)
   - search_glossary: 금융 용어 검색
   - query_db: DB 직접 조회 (통계/집계/분석)
+
+🍽️ 맛집/식당
+  - search_restaurant: 여의도 주변 맛집/식당/카페 검색
 
 🎯 온보딩
   - get_assignments: 온보딩 과제 조회
@@ -438,8 +455,8 @@ SYSTEM_PROMPT = """\
 - 게시판/공지사항/인기글/최신글 질문 → get_notices 호출. ⚠️ "게시판"은 사내 공지사항이며 보도자료가 아닙니다!
 - 개인 데이터 질문 (내 연차, 내 메일, 내 프로필 등) → 해당 조회 도구 호출
 - 회사 규정/정책 질문 (연차 규정, 법인카드 기준 등) → search_documents 호출
-- 맛집/점심/식당/카페 추천 질문 → search_documents 호출 (여의도 맛집 데이터가 있음)
-- 회사 근처, 주변 장소 관련 질문 → search_documents 호출
+- 맛집/점심/식당/카페/회식 장소/전화번호 질문 → search_restaurant 호출
+- 회사 근처, 주변 장소 관련 질문 → search_restaurant 호출
 - 사람 찾기 → search_employees 호출
 - 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
 - "XX님 휴가셔?", "XX님 출근하셨나?" → check_leave_status(name="XX") 호출. 절대 추측하지 마세요!
@@ -447,7 +464,7 @@ SYSTEM_PROMPT = """\
 - "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
   ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
 - 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)
-- 결재함/보고서 관련 질문 (결재 상태, 보고서 양식, 업무 히스토리) → get_documents 호출
+- 결재함/보고서 관련 질문 (결재 상태, 보고서 양식, 업무 히스토리) → get_approvals 호출
 - 다른 도구로 해결 안 되는 DB 조회/통계/집계 질문 → query_db 호출 (예: "이번 달 경비 총액", "팀별 인원수")
 - 금융 용어/개념 질문 → search_glossary 호출
 - 일정/캘린더 추가 → add_calendar_event 호출 (연차 신청이 아님!)

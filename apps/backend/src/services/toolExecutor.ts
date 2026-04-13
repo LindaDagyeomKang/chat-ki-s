@@ -203,7 +203,7 @@ export async function executeTool(
       return { result: `${dateLabel}${companyOnly ? ' 전사' : ''} 일정 ${events.length}건:\n${list}` }
     }
 
-    case 'get_documents': {
+    case 'get_approvals': {
       const cat = (args.category || '').trim()
       const kw = (args.keyword || '').trim()
       const statusFilter = (args.status || '').trim()
@@ -727,6 +727,10 @@ export async function executeTool(
 
     case 'search_documents': {
       return { result: `__SEARCH_DOCS__:${args.query}` }
+    }
+
+    case 'search_restaurant': {
+      return { result: `__SEARCH_RESTAURANT__:${args.query}` }
     }
 
     case 'query_db': {

@@ -221,8 +221,9 @@ export async function conversationRoutes(app: FastifyInstance) {
         for (const tc of toolsBody.tool_calls) {
           const args = JSON.parse(tc.arguments || '{}')
 
-          // search_documents는 AI 서비스의 RAG를 호출
-          if (tc.name === 'search_documents') {
+          // search_documents / search_restaurant는 AI 서비스의 RAG를 호출
+          if (tc.name === 'search_documents' || tc.name === 'search_restaurant') {
+            const isRestaurant = tc.name === 'search_restaurant'
             // LLM이 축약한 query와 원본 질문을 결합하여 검색 정확도 향상
             const searchQuery = args.query || content
             const ragRes = await fetch(`${AI_SERVICE_URL}/chat`, {
@@ -233,10 +234,9 @@ export async function conversationRoutes(app: FastifyInstance) {
             if (ragRes.ok) {
               const ragBody = await ragRes.json() as any
               let ragContent = ragBody.answer || '관련 문서를 찾지 못했습니다.'
-              // 출처 정보를 텍스트에 포함 + sources 배열에 저장 (맛집 출처는 항상 제외)
-              if (ragBody.sources?.length > 0) {
+              // 출처 표시: 맛집 검색은 출처 생략, 문서 검색은 맛집 출처 제외 후 표시
+              if (ragBody.sources?.length > 0 && !isRestaurant) {
                 const nonFoodSources = ragBody.sources.filter((s: any) => !s.source?.startsWith('맛집'))
-                // 맛집 출처만 있는 경우(맛집 질문) → 출처 표시하지 않음
                 if (nonFoodSources.length > 0) {
                   const sourceNames = nonFoodSources
                     .map((s: any) => s.source?.replace('.md', '').replace(/_/g, ' '))
@@ -244,7 +244,6 @@ export async function conversationRoutes(app: FastifyInstance) {
                   if (sourceNames.length > 0) {
                     ragContent += `\n📄 출처: ${sourceNames.join(', ')}`
                   }
-                  // 프론트 출처 카드용 데이터 저장
                   for (const s of nonFoodSources) {
                     const title = s.source?.replace('.md', '').replace(/_/g, ' ') || ''
                     if (title && !ragSources.find(rs => rs.title === title)) {
@@ -259,7 +258,7 @@ export async function conversationRoutes(app: FastifyInstance) {
                 content: ragContent,
               })
             } else {
-              toolResults.push({ role: 'tool', tool_call_id: tc.id, content: '문서 검색에 실패했습니다.' })
+              toolResults.push({ role: 'tool', tool_call_id: tc.id, content: isRestaurant ? '맛집 검색에 실패했습니다.' : '문서 검색에 실패했습니다.' })
             }
           } else {
             // 일반 도구 실행
