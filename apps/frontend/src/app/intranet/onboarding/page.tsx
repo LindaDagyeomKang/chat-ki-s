@@ -87,6 +87,7 @@ export default function OnboardingPage() {
 
   function toggleStatus(id: string) {
     setMissions((prev) => {
+      const oldMission = prev.find((m) => m.id === id)
       const updated = prev.map((m) => {
         if (m.id !== id) return m
         const next: Mission['status'] = m.status === 'todo' ? 'in_progress' : m.status === 'in_progress' ? 'done' : 'todo'
@@ -95,6 +96,17 @@ export default function OnboardingPage() {
       // DB에 상태 저장
       const mission = updated.find((m) => m.id === id)
       if (mission) updateAssignmentStatus(id, kanbanToDbStatus(mission.status)).catch(() => {})
+
+      // in_progress로 바뀔 때 챗봇 메시지 트리거 (체크박스 클릭 시에도)
+      if (oldMission && oldMission.status === 'todo' && mission?.status === 'in_progress') {
+        const chatMsg = MISSION_CHAT_MESSAGES[oldMission.title] || `'${oldMission.title}' 미션을 시작하셨군요! 도움이 필요하시면 언제든 말씀해주세요.`
+        localStorage.setItem('chat-ki-s:mission-chat', JSON.stringify({
+          title: oldMission.title,
+          message: chatMsg,
+          timestamp: Date.now(),
+        }))
+        window.dispatchEvent(new Event('mission-chat'))
+      }
       return updated
     })
   }
@@ -153,7 +165,7 @@ export default function OnboardingPage() {
           <div className="flex-1">
             <span style={{ color: '#B40064', fontSize: 12, fontFamily: 'Manrope', fontWeight: 700 }}>Tip!</span>
             <span style={{ color: '#475569', fontSize: 12 }}>
-              멘토의 한마디는 신규 입사자분들의 빠른 적응을 위해 멘토들이 직접 남긴 코멘트로 설계되었습니다. 궁금한 점은 언제든 멘토나 AI 챗봇 키링에게 물어보세요!
+              과제를 하나씩 시작하면 챗봇 키링이 도움을 줄 수 있어요! 과제 관련 궁금한 점은 언제든 키링에게 물어보세요.
             </span>
           </div>
         </div>
