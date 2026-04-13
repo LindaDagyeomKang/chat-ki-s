@@ -87,15 +87,15 @@ export default function HRPage() {
       ]} />
     </IntranetSidebar>
 
-    <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
+    <main className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
       <div>
         <h1 style={{ color: '#111547', fontSize: 30, fontWeight: 500 }}>인사시스템</h1>
         <p style={{ color: 'rgba(17,21,71,0.50)', fontSize: 14, fontWeight: 500 }}>{userName} 님의 인사 현황을 한눈에 확인하세요.</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex gap-4">
         {/* 좌: 휴가/신청 관리 */}
-        <div className="flex-1 bg-white p-8 flex flex-col gap-6" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
+        <div className="flex-1 bg-white p-5 flex flex-col gap-4" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg width="20" height="20" viewBox="0 0 18 20" fill="none"><path d="M14 2h3c.55 0 1 .45 1 1v16c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3V0h2v2h6V0h2v2zM2 8v10h14V8H2zm2 2h4v4H4v-4z" fill="#E1007F"/></svg>
@@ -105,25 +105,25 @@ export default function HRPage() {
           </div>
 
           <div className="flex gap-3">
-            <div className="flex-1 p-6 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32, borderTop: '4px solid #E1007F' }}>
+            <div className="flex-1 p-4 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32, borderTop: '4px solid #E1007F' }}>
               <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>잔여 연차</span>
               <div className="flex items-end gap-1">
-                <span style={{ color: '#111547', fontSize: 36, fontFamily: 'Manrope', fontWeight: 800 }}>{Math.max(0, leaveTotal - approvedCount)}</span>
-                <span style={{ color: '#111547', fontSize: 14, marginBottom: 6 }}>일</span>
+                <span style={{ color: '#111547', fontSize: 28, fontFamily: 'Manrope', fontWeight: 800 }}>{Math.max(0, leaveTotal - approvedCount)}</span>
+                <span style={{ color: '#111547', fontSize: 13, marginBottom: 4 }}>일</span>
               </div>
             </div>
-            <div className="flex-1 p-6 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
+            <div className="flex-1 p-4 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
               <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>올해 사용</span>
               <div className="flex items-end gap-1">
-                <span style={{ color: '#94A3B8', fontSize: 36, fontFamily: 'Manrope', fontWeight: 800 }}>{String(approvedCount).padStart(2, '0')}</span>
-                <span style={{ color: '#94A3B8', fontSize: 14, marginBottom: 6 }}>일</span>
+                <span style={{ color: '#94A3B8', fontSize: 28, fontFamily: 'Manrope', fontWeight: 800 }}>{String(approvedCount).padStart(2, '0')}</span>
+                <span style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>일</span>
               </div>
             </div>
-            <div className="flex-1 p-6 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
+            <div className="flex-1 p-4 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
               <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>승인 대기</span>
               <div className="flex items-end gap-1">
-                <span style={{ color: '#94A3B8', fontSize: 36, fontFamily: 'Manrope', fontWeight: 800 }}>{String(pendingCount).padStart(2, '0')}</span>
-                <span style={{ color: '#94A3B8', fontSize: 14, marginBottom: 6 }}>건</span>
+                <span style={{ color: '#94A3B8', fontSize: 28, fontFamily: 'Manrope', fontWeight: 800 }}>{String(pendingCount).padStart(2, '0')}</span>
+                <span style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>건</span>
               </div>
             </div>
           </div>
@@ -141,8 +141,8 @@ export default function HRPage() {
         </div>
 
         {/* 우: 팀원 일정 + 급여 */}
-        <div className="flex flex-col gap-6" style={{ width: 340, flexShrink: 0 }}>
-          <div className="bg-white p-8 flex flex-col gap-4" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
+        <div className="flex flex-col gap-4" style={{ width: 340, flexShrink: 0 }}>
+          <div className="bg-white p-5 flex flex-col gap-3" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
             <div className="flex items-center gap-2">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M15 8a3 3 0 100-6 3 3 0 000 6zm-8 0a3 3 0 100-6 3 3 0 000 6zm0 2c-2.33 0-7 1.17-7 3.5V16h14v-2.5C14 11.17 9.33 10 7 10zm8 0c-.29 0-.62.02-.97.05A4.22 4.22 0 0118 13.5V16h2v-2.5C20 11.17 17.33 10 15 10z" fill="#E1007F"/></svg>
               <h2 style={{ color: '#111547', fontSize: 16, fontWeight: 500 }}>팀원 근태 및 주요 일정</h2>
@@ -212,23 +212,23 @@ export default function HRPage() {
       </div>
 
       {/* 하단: 근태 현황 + 경비 정산 */}
-      <div className="flex gap-6">
-        <div className="flex-1 bg-white p-6 flex flex-col gap-4" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
+      <div className="flex gap-4">
+        <div className="flex-1 bg-white p-5 flex flex-col gap-3" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
           <div className="flex items-center gap-2">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H9v6l5.25 3.15.75-1.23-4.5-2.67V5z" fill="#6366F1"/></svg>
             <h2 style={{ color: '#111547', fontSize: 20, fontWeight: 500 }}>근태 현황</h2>
           </div>
           <div className="flex items-end justify-center gap-6 py-2">
             <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 80, background: 'linear-gradient(180deg, #6366F1, #818CF8)' }} />
+              <div className="w-10 rounded-t-lg" style={{ height: 60, background: 'linear-gradient(180deg, #6366F1, #818CF8)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>정상근무</span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 56, background: 'linear-gradient(180deg, #A78BFA, #C4B5FD)' }} />
+              <div className="w-10 rounded-t-lg" style={{ height: 42, background: 'linear-gradient(180deg, #A78BFA, #C4B5FD)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>연장근무</span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 32, background: 'linear-gradient(180deg, #F472B6, #FBCFE8)' }} />
+              <div className="w-10 rounded-t-lg" style={{ height: 24, background: 'linear-gradient(180deg, #F472B6, #FBCFE8)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>지각/조퇴</span>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function HRPage() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-6 flex flex-col gap-4" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
+        <div className="flex-1 bg-white p-5 flex flex-col gap-3" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M11 8h3l-4-4-4 4h3v4H6l4 4 4-4h-3V8zM2 2h16v2H2V2zm0 14h16v2H2v-2z" fill="#F97316"/></svg>

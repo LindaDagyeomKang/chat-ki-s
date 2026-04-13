@@ -113,9 +113,9 @@ export default function IntranetDashboard() {
         { label: '더보기', href: '/intranet', iconSvg: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="4" r="2" fill="#94A3B8"/><circle cx="10" cy="4" r="2" fill="#94A3B8"/><circle cx="16" cy="4" r="2" fill="#94A3B8"/><circle cx="4" cy="10" r="2" fill="#94A3B8"/><circle cx="10" cy="10" r="2" fill="#94A3B8"/><circle cx="16" cy="10" r="2" fill="#94A3B8"/></svg> },
       ]} />
     </IntranetSidebar>
-    <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
+    <main className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
       {/* 챗키스 소개 배너 */}
-      <div className="flex items-center justify-between px-16" style={{ borderRadius: 32, background: '#111547', minHeight: 240 }}>
+      <div className="flex items-center justify-between px-16" style={{ borderRadius: 32, background: '#111547', minHeight: 180 }}>
         <div className="flex flex-col gap-4">
           <span className="px-3 py-1 rounded-full text-xs font-medium self-start" style={{ background: 'rgba(225,0,127,0.80)', color: '#FFF' }}>Chat-Ki-S</span>
           <h2 className="text-white" style={{ fontSize: 28, fontWeight: 600, lineHeight: '36px' }}>Chat-Ki-S: Chatbot과 함께하는 Kiwoom Life Study</h2>
@@ -125,7 +125,7 @@ export default function IntranetDashboard() {
             <Link href="/chat" className="text-sm font-medium px-6 py-2.5 rounded-full" style={{ background: '#E1007F', color: '#FFF' }}>키링에게 물어보기</Link>
           </div>
         </div>
-        <img src="/images/image 4.png" alt="Chat-Ki-S" className="w-40 h-40 opacity-80" />
+        <img src="/images/image 4.png" alt="Chat-Ki-S" className="w-32 h-32 opacity-80" />
       </div>
 
       {/* 공지사항 롤링 */}
@@ -217,8 +217,8 @@ export default function IntranetDashboard() {
       </div>
 
       {/* 자원관리 - 주간 캘린더 */}
-      <div className="bg-white" style={{ borderRadius: 32, padding: 32, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white" style={{ borderRadius: 32, padding: 24, border: '1px solid #F8FAFC', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
+        <div className="flex items-center justify-between mb-4">
           <h2 className="font-medium" style={{ fontSize: 16, color: '#111547' }}>일정관리</h2>
           <div className="flex items-center gap-3">
             <Link href="/intranet/calendar" className="text-xs font-medium" style={{ color: '#E1007F' }}>전체보기</Link>
@@ -230,7 +230,7 @@ export default function IntranetDashboard() {
             const dayEvents = eventsByDate[wd.date] || []
             const isToday = wd.date === today.getDate()
             return (
-              <div key={wd.day} className="p-4" style={{ minHeight: 160 }}>
+              <div key={wd.day} className="p-3" style={{ minHeight: 120 }}>
                 <div className="text-center mb-4">
                   <p className="font-black" style={{ fontSize: 20, color: isToday ? '#E1007F' : '#111547', fontFamily: 'Manrope' }}>{wd.date}</p>
                   <p className="font-bold uppercase" style={{ fontSize: 10, color: isToday ? '#E1007F' : '#94A3B8', fontFamily: 'Manrope' }}>{wd.day}</p>
