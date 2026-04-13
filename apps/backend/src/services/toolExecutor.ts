@@ -719,11 +719,17 @@ export async function executeTool(
 }
 
 function formatEmployeeResults(rows: any[], _ctx: ToolContext): string {
-  return rows.slice(0, 5).map((e, i) => {
+  const total = rows.length
+  const display = rows.slice(0, 10)
+  const result = display.map((e, i) => {
     if (EXEC_RANKS.includes(e.rank)) {
       return `${i + 1}. ${e.name} ${e.rank}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ※ 임원 연락은 비서실(내선 1000)을 통해 문의해 주세요.`
     }
     const base = `${i + 1}. ${e.name} ${e.rank ?? ''}${e.position && e.position !== '-' ? ` (${e.position})` : ''}\n   ${e.division ?? ''}${e.team ? ` > ${e.team}` : ''}\n   이메일: ${e.email ?? '-'}\n   내선: ${e.phone ?? '-'}\n   담당: ${e.duty ?? '-'}`
     return base
   }).join('\n\n')
+  if (total > 10) {
+    return `총 ${total}명 중 10명 표시:\n\n${result}\n\n... 외 ${total - 10}명`
+  }
+  return total > 1 ? `총 ${total}명:\n\n${result}` : result
 }
