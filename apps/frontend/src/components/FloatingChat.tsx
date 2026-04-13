@@ -168,11 +168,11 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
     return (
       <button
         onClick={handleOpen}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
         style={{ background: '#111547' }}
         aria-label="챗봇 열기"
       >
-        <img src="/images/image 4.png" alt={botName} className="w-8 h-8" />
+        <img src="/images/image 4.png" alt={botName} className="w-10 h-10" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-bold" style={{ background: '#EF4444', fontSize: 10 }}>
             {unreadCount > 9 ? '9+' : unreadCount}
