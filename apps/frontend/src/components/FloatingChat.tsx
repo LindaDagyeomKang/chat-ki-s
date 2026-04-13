@@ -293,28 +293,29 @@ export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F8FAFC' }}>
         {messages.length === 0 ? (
-          <div className="flex flex-col px-2 py-4 gap-5">
-            {/* 타이틀 + 환영 인사 */}
-            <div>
-              <h2 className="text-[15px] font-bold mb-2" style={{ color: '#111547' }}>
-                키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
-              </h2>
-              <p className="text-[12px] leading-relaxed" style={{ color: '#475569' }}>
-                안녕하세요! 궁금한 점을 물어보시면{'\n'}빠르게 안내해 드리겠습니다.
-              </p>
+          <div className="flex flex-col h-full px-2 py-4">
+            {/* 상단: 타이틀 + 환영 인사 + CTA */}
+            <div className="flex-1 flex flex-col gap-5">
+              <div>
+                <h2 className="text-[15px] font-bold mb-2" style={{ color: '#111547' }}>
+                  키움증권 신입사원 온보딩 챗봇, 챗키스 🐱
+                </h2>
+                <p className="text-[12px] leading-relaxed" style={{ color: '#475569' }}>
+                  안녕하세요! 궁금한 점을 물어보시면{'\n'}빠르게 안내해 드리겠습니다.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleSend('챗키스 활용 방법', 'rag')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-colors"
+                style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
+              >
+                📋 챗키스 활용 가이드
+              </button>
             </div>
 
-            {/* CTA 버튼 */}
-            <button
-              onClick={() => handleSend('챗키스 활용 방법', 'rag')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-colors"
-              style={{ border: '1.5px solid #E1007F', color: '#E1007F', background: '#FFF' }}
-            >
-              📋 챗키스 활용 가이드
-            </button>
-
-            {/* FAQ 빠른 질문 (오른쪽 정렬) */}
-            <div className="flex flex-col gap-2 items-end">
+            {/* 하단: FAQ 빠른 질문 (입력란 바로 위) */}
+            <div className="flex flex-col gap-2 items-end pt-3">
               {[
                 '인사팀 담당자가 누구예요?',
                 '연차 신청 어떻게 해요?',
