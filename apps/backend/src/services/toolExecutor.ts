@@ -355,16 +355,31 @@ export async function executeTool(
         return { result: formatEmployeeResults(rows, ctx) }
       }
 
-      // 직급 검색
+      // 직급 검색 (팀장/본부장은 position 필드에서 검색)
       if (searchRank) {
-        const rows = await db.select().from(employees).where(eq(employees.rank, searchRank)).limit(10)
+        let rows
+        if (searchRank === '팀장' || searchRank === '본부장') {
+          rows = await db.select().from(employees).where(eq(employees.position, searchRank)).limit(10)
+        } else {
+          rows = await db.select().from(employees).where(eq(employees.rank, searchRank)).limit(10)
+        }
         if (rows.length === 0) return { result: `"${searchRank}" 직급의 직원을 찾지 못했습니다.` }
         return { result: `${searchRank} 직급 직원 ${rows.length}명:\n\n${formatEmployeeResults(rows, ctx)}` }
       }
 
       const conditions: any[] = []
       if (name) conditions.push(ilike(employees.name, `%${name}%`))
-      if (department) conditions.push(or(ilike(employees.team, `%${department}%`), ilike(employees.division, `%${department}%`)))
+      if (department) {
+        // "팀장" 검색 시 position 필드도 함께 검색
+        const deptClean = department.replace(/\s*(팀장|본부장)\s*/g, '').trim()
+        const isLeaderSearch = department.includes('팀장') || department.includes('본부장')
+        if (deptClean) {
+          conditions.push(or(ilike(employees.team, `%${deptClean}%`), ilike(employees.division, `%${deptClean}%`)))
+        }
+        if (isLeaderSearch) {
+          conditions.push(or(eq(employees.position, '팀장'), eq(employees.position, '본부장')))
+        }
+      }
       if (topic) conditions.push(or(ilike(employees.duty, `%${topic}%`), ilike(employees.team, `%${topic}%`)))
 
       if (conditions.length === 0) return { result: '검색할 이름, 부서, 또는 업무 키워드를 알려주세요.' }
