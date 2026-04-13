@@ -94,7 +94,7 @@ export async function executeTool(
               const senderName = m.fromText?.match(/^([가-힣]+)/)?.[1] || '알 수 없음'
               return `${i + 1}. [${senderName}] ${m.subject} (${dateStr})`
             }).join('\n')
-            return { result: `오늘 새로 받은 메일은 없습니다. 최근 메일 ${recent.length}건:\n${list}` }
+            return { result: `오늘 새로 받은 메일은 없습니다.\n\n[참고] 최근 받은 메일 ${recent.length}건 (오늘 메일이 아닌 이전 메일입니다):\n${list}` }
           }
         }
         const label = filter === 'today' ? '오늘 받은' : filter === 'unread' ? '읽지 않은' : ''
