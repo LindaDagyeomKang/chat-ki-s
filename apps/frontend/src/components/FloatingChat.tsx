@@ -18,7 +18,7 @@ interface FloatingChatProps {
   pageContext?: PageContextData
 }
 
-export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '키링', defaultOpen = true, pageContext }: FloatingChatProps) {
+export default function FloatingChat({ chat, onExpand, onOpenChange, botName = '키링', defaultOpen = false, pageContext }: FloatingChatProps) {
   const { messages, sending, handleSend: rawHandleSend, handleFeedback, feedbackMap, savedMessages, handleSave } = chat
   const loadConversation = (chat as any).loadConversation as ((id: string) => Promise<void>) | undefined
 
