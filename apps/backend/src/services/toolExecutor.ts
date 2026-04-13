@@ -56,10 +56,13 @@ export async function executeTool(
       const conditions: any[] = [eq(mails.toId, userId)]
 
       if (filter === 'today') {
-        // KST 기준 오늘 시작 시간
+        // KST 기준 오늘 시작~끝
         const todayStart = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
         todayStart.setHours(0, 0, 0, 0)
+        const todayEnd = new Date(todayStart)
+        todayEnd.setHours(23, 59, 59, 999)
         conditions.push(gte(mails.receivedAt, todayStart))
+        conditions.push(lte(mails.receivedAt, todayEnd))
       } else if (filter === 'unread') {
         conditions.push(eq(mails.isRead, false))
       }
