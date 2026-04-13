@@ -65,6 +65,8 @@ export async function executeTool(
         conditions.push(lte(mails.receivedAt, todayEnd))
       } else if (filter === 'unread') {
         conditions.push(eq(mails.isRead, false))
+      } else if (filter === 'read') {
+        conditions.push(eq(mails.isRead, true))
       }
 
       const rows = await db.select().from(mails)
@@ -186,8 +188,10 @@ export async function executeTool(
         return { result: `${y}년 ${m}월${companyOnly ? ' 전사' : ''} 일정 ${events.length}건:\n${list}` }
       }
 
-      // 특정 날짜 조회
-      const targetDate = date || new Date().toISOString().split('T')[0]
+      // 특정 날짜 조회 (KST 기준)
+      const kstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+      const kstToday = `${kstNow.getFullYear()}-${String(kstNow.getMonth() + 1).padStart(2, '0')}-${String(kstNow.getDate()).padStart(2, '0')}`
+      const targetDate = date || kstToday
       const targetDay = new Date(targetDate)
       const dayName = dayNames[targetDay.getDay()]
       const isToday = targetDate === new Date().toISOString().split('T')[0]

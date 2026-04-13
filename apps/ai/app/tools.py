@@ -16,8 +16,8 @@ TOOLS = [
                 "properties": {
                     "filter": {
                         "type": "string",
-                        "enum": ["today", "all", "unread"],
-                        "description": "메일 필터: today(오늘 수신), all(전체), unread(안 읽은 메일)"
+                        "enum": ["today", "all", "unread", "read"],
+                        "description": "메일 필터: today(오늘 수신), all(전체), unread(안 읽은 메일), read(읽은 메일)"
                     },
                     "sender": {
                         "type": "string",
@@ -455,14 +455,17 @@ SYSTEM_PROMPT = """\
 - 게시판/공지사항/인기글/최신글 질문 → get_notices 호출. ⚠️ "게시판"은 사내 공지사항이며 보도자료가 아닙니다!
 - 개인 데이터 질문 (내 연차, 내 메일, 내 프로필 등) → 해당 조회 도구 호출
 - 회사 규정/정책 질문 (연차 규정, 법인카드 기준 등) → search_documents 호출
-- 맛집/점심/식당/카페/회식 장소/전화번호 질문 → search_restaurant 호출
+- 맛집/점심/식당/카페/회식 장소/회식 어디서/전화번호 질문 → search_restaurant 호출
 - 회사 근처, 주변 장소 관련 질문 → search_restaurant 호출
 - 사람 찾기 → search_employees 호출
+- "XX급 목록 보여줘", "부장급 직원", "과장 누구야" → search_employees(rank="XX") 호출. count=true가 아님!
 - 액션 요청 (연차 신청, 경비 정산) → submit_leave 또는 submit_expense 호출
 - "XX님 휴가셔?", "XX님 출근하셨나?" → check_leave_status(name="XX") 호출. 절대 추측하지 마세요!
 - "우리팀/저희팀/소속팀/팀원 연차 쓰는 사람?", "팀에 휴가인 사람?" → check_leave_status(name="우리팀") 호출. 팀 단위 질문은 반드시 name="우리팀"으로 전달하세요.
-- "XX님 휴가시면 누구한테 연락해?", "대리인 찾아줘" → find_substitute(name="XX") 호출
-  ⚠️ 부재/휴가 대리인은 search_employees가 아닌 반드시 find_substitute를 사용하세요!
+- "XX님 휴가시면 누구한테 연락해?", "XX님 부재 시 누구한테", "대리인 찾아줘" → find_substitute(name="XX") 호출
+  ⚠️ 부재/휴가 대리인은 search_employees나 search_documents가 아닌 반드시 find_substitute를 사용하세요!
+- "XX이 뭘 물어봤어?", "XX한테 온 메일", "XX이 뭐라고 했어?", "XX이 보낸 메일" → get_mails 호출. ⚠️ 사람 이름이 있어도 메일 내용을 묻는 질문이면 반드시 메일 도구를 사용하세요!
+- "코드 리뷰 어디서?", "회의 어디서?", "스크럼 몇 시?" 등 일정에 등록된 제목·장소·시간 질문 → get_schedule 호출
 - 메일 작성 도움 → draft_email 호출 (수신자/용건/내용 파악 후)
 - 결재함/보고서 관련 질문 (결재 상태, 보고서 양식, 업무 히스토리) → get_approvals 호출
 - 다른 도구로 해결 안 되는 DB 조회/통계/집계 질문 → query_db 호출 (예: "이번 달 경비 총액", "팀별 인원수")
