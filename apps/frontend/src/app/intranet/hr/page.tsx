@@ -213,60 +213,60 @@ export default function HRPage() {
 
       {/* 하단: 근태 현황 + 경비 정산 */}
       <div className="flex gap-4">
-        <div className="flex-1 bg-white p-5 flex flex-col gap-3" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
+        <div className="flex-1 bg-white p-4 flex flex-col gap-2" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
           <div className="flex items-center gap-2">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H9v6l5.25 3.15.75-1.23-4.5-2.67V5z" fill="#6366F1"/></svg>
-            <h2 style={{ color: '#111547', fontSize: 20, fontWeight: 500 }}>근태 현황</h2>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H9v6l5.25 3.15.75-1.23-4.5-2.67V5z" fill="#6366F1"/></svg>
+            <h2 style={{ color: '#111547', fontSize: 16, fontWeight: 500 }}>근태 현황</h2>
           </div>
-          <div className="flex items-end justify-center gap-6 py-2">
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 60, background: 'linear-gradient(180deg, #6366F1, #818CF8)' }} />
+          <div className="flex items-end justify-center gap-6 py-1">
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-9 rounded-t-lg" style={{ height: 40, background: 'linear-gradient(180deg, #6366F1, #818CF8)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>정상근무</span>
             </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 42, background: 'linear-gradient(180deg, #A78BFA, #C4B5FD)' }} />
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-9 rounded-t-lg" style={{ height: 28, background: 'linear-gradient(180deg, #A78BFA, #C4B5FD)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>연장근무</span>
             </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="w-10 rounded-t-lg" style={{ height: 24, background: 'linear-gradient(180deg, #F472B6, #FBCFE8)' }} />
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-9 rounded-t-lg" style={{ height: 16, background: 'linear-gradient(180deg, #F472B6, #FBCFE8)' }} />
               <span style={{ color: '#64748B', fontSize: 10 }}>지각/조퇴</span>
             </div>
           </div>
-          <div className="flex justify-center gap-12 pt-3" style={{ borderTop: '1px solid #F1F5F9' }}>
+          <div className="flex justify-center gap-10 pt-2" style={{ borderTop: '1px solid #F1F5F9' }}>
             <div className="text-center">
-              <span style={{ color: '#64748B', fontSize: 11 }}>이번 주 연장</span>
-              <p style={{ color: '#111547', fontSize: 22, fontFamily: 'Manrope', fontWeight: 800, marginTop: 2 }}>4.5 <span style={{ fontSize: 13, fontWeight: 500 }}>시간</span></p>
+              <span style={{ color: '#64748B', fontSize: 10 }}>이번 주 연장</span>
+              <p style={{ color: '#111547', fontSize: 18, fontFamily: 'Manrope', fontWeight: 800, marginTop: 1 }}>4.5 <span style={{ fontSize: 11, fontWeight: 500 }}>시간</span></p>
             </div>
             <div className="text-center">
-              <span style={{ color: '#64748B', fontSize: 11 }}>평균 퇴근</span>
-              <p style={{ color: '#111547', fontSize: 22, fontFamily: 'Manrope', fontWeight: 800, marginTop: 2 }}>18:42</p>
+              <span style={{ color: '#64748B', fontSize: 10 }}>평균 퇴근</span>
+              <p style={{ color: '#111547', fontSize: 18, fontFamily: 'Manrope', fontWeight: 800, marginTop: 1 }}>18:42</p>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-5 flex flex-col gap-3" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)' }}>
-          <div className="flex items-center justify-between">
+        <div className="flex-1 bg-white p-4 flex flex-col gap-2" style={{ borderRadius: 32, boxShadow: '0px 32px 48px rgba(17,21,71,0.04)', maxHeight: 220 }}>
+          <div className="flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M11 8h3l-4-4-4 4h3v4H6l4 4 4-4h-3V8zM2 2h16v2H2V2zm0 14h16v2H2v-2z" fill="#F97316"/></svg>
-              <h2 style={{ color: '#111547', fontSize: 20, fontWeight: 500 }}>경비 정산</h2>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M11 8h3l-4-4-4 4h3v4H6l4 4 4-4h-3V8zM2 2h16v2H2V2zm0 14h16v2H2v-2z" fill="#F97316"/></svg>
+              <h2 style={{ color: '#111547', fontSize: 16, fontWeight: 500 }}>경비 정산</h2>
             </div>
             <a href="/intranet/expenses" style={{ color: '#E1007F', fontSize: 12, fontWeight: 500 }}>전체보기</a>
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1 p-4 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
+          <div className="flex gap-3 flex-shrink-0">
+            <div className="flex-1 p-3 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
               <span style={{ color: '#64748B', fontSize: 11, fontWeight: 500 }}>이번 달 정산</span>
-              <span style={{ color: '#111547', fontSize: 20, fontFamily: 'Manrope', fontWeight: 800 }}>
-                {expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}<span style={{ fontSize: 12, fontWeight: 500 }}>원</span>
+              <span style={{ color: '#111547', fontSize: 18, fontFamily: 'Manrope', fontWeight: 800 }}>
+                {expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}<span style={{ fontSize: 11, fontWeight: 500 }}>원</span>
               </span>
             </div>
-            <div className="flex-1 p-4 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
+            <div className="flex-1 p-3 flex flex-col items-center gap-1" style={{ background: '#F8FAFC', borderRadius: 32 }}>
               <span style={{ color: '#64748B', fontSize: 11, fontWeight: 500 }}>승인 대기</span>
-              <span style={{ color: '#D97706', fontSize: 20, fontFamily: 'Manrope', fontWeight: 800 }}>
-                {expenses.filter(e => e.status === 'pending').length}<span style={{ fontSize: 12, fontWeight: 500 }}>건</span>
+              <span style={{ color: '#D97706', fontSize: 18, fontFamily: 'Manrope', fontWeight: 800 }}>
+                {expenses.filter(e => e.status === 'pending').length}<span style={{ fontSize: 11, fontWeight: 500 }}>건</span>
               </span>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
             {expenses.length === 0 ? (
               <p style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', padding: 16 }}>정산 내역이 없습니다</p>
             ) : (
