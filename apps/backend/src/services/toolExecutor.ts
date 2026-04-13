@@ -108,7 +108,9 @@ export async function executeTool(
         const date = new Date(m.receivedAt)
         const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
         const senderName = m.fromText?.match(/^([가-힣]+)/)?.[1] || '알 수 없음'
-        return `${i + 1}. [${senderName}] ${m.subject} (${dateStr})`
+        // 본문 앞부분을 요약으로 포함 (AI가 내용 파악 가능하도록)
+        const bodyPreview = m.body ? m.body.replace(/\n+/g, ' ').slice(0, 120).trim() + (m.body.length > 120 ? '…' : '') : ''
+        return `${i + 1}. [${senderName}] ${m.subject} (${dateStr})${bodyPreview ? `\n   내용: ${bodyPreview}` : ''}`
       }).join('\n')
 
       const label = filter === 'today' ? '오늘 받은' : filter === 'unread' ? '읽지 않은' : '받은'
