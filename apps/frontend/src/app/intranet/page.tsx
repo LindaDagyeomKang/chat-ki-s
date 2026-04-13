@@ -115,7 +115,7 @@ export default function IntranetDashboard() {
     </IntranetSidebar>
     <main className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
       {/* 챗키스 소개 배너 */}
-      <div className="flex items-center justify-between px-16 py-12" style={{ borderRadius: 32, background: '#111547', minHeight: 180 }}>
+      <div className="flex items-center justify-between px-16 py-12" style={{ borderRadius: 32, background: '#111547' }}>
         <div className="flex flex-col gap-4">
           <span className="px-3 py-1 rounded-full text-xs font-medium self-start" style={{ background: 'rgba(225,0,127,0.80)', color: '#FFF' }}>Chat-Ki-S</span>
           <h2 className="text-white" style={{ fontSize: 28, fontWeight: 600, lineHeight: '36px' }}>Chat-Ki-S: Chatbot과 함께하는 Kiwoom Life Study</h2>
