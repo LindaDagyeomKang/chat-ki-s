@@ -39,7 +39,7 @@ export default function HRPage() {
 
   async function fetchTeamEvents() {
     try {
-      const token = localStorage.getItem('accessToken')
+      const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
       const res = await fetch(`${API_URL}/api/hr/team-events`, { headers: { Authorization: `Bearer ${token}` } })
       if (res.ok) setTeamEvents(await res.json())
     } catch {}

@@ -27,7 +27,7 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
   useEffect(() => {
     async function load() {
       try {
-        const token = localStorage.getItem('accessToken')
+        const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
         const res = await fetch(`${API_URL}/api/users/me/profile`, {
           headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           credentials: 'include',
@@ -44,7 +44,7 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
 
   async function saveField(field: 'status' | 'duty', value: string) {
     try {
-      const token = localStorage.getItem('accessToken')
+      const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
       await fetch(`${API_URL}/api/users/me/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -160,7 +160,7 @@ export default function IntranetSidebar({ userName, userDept, userRole, children
           <img src="/icons/Icon-9.svg" alt="" width={15} height={15} />
           환경설정
         </button>
-        <button onClick={() => { localStorage.removeItem('accessToken'); localStorage.removeItem('chat-ki-s:bot-nickname'); router.replace('/login') }} className="flex items-center gap-3 py-2 text-xs" style={{ color: '#BA1A1A' }}>
+        <button onClick={() => { sessionStorage.removeItem('accessToken'); localStorage.removeItem('accessToken'); localStorage.removeItem('chat-ki-s:bot-nickname'); router.replace('/login') }} className="flex items-center gap-3 py-2 text-xs" style={{ color: '#BA1A1A' }}>
           <img src="/icons/Icon-8.svg" alt="" width={14} height={14} />
           로그아웃
         </button>

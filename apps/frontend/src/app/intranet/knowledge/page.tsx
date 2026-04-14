@@ -37,7 +37,7 @@ export default function KnowledgePage() {
 
   async function fetchDocs() {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
       const res = await fetch(`${API_URL}/api/rag/documents`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -50,7 +50,7 @@ export default function KnowledgePage() {
     setUploading(true)
     setUploadResult(null)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
       const formData = new FormData()
       formData.append('file', file)
       const res = await fetch(`${API_URL}/api/rag/documents`, {

@@ -10,17 +10,19 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-// Token management (HttpOnly 쿠키 기반 — localStorage는 폴백용으로만 유지)
+// Token management — sessionStorage로 탭별 세션 분리 (다중 탭 로그인 지원)
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('accessToken')
+  return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken')
 }
 
 export function setToken(token: string): void {
-  localStorage.setItem('accessToken', token)
+  sessionStorage.setItem('accessToken', token)
+  localStorage.setItem('accessToken', token) // 호환용 폴백
 }
 
 export function clearToken(): void {
+  sessionStorage.removeItem('accessToken')
   localStorage.removeItem('accessToken')
 }
 
